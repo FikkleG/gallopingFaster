@@ -1,0 +1,21 @@
+ground-plane:
+    type: "infinite-plane"
+    mu: 1
+    restitution: 0.0
+    height: 0
+    #height: 0.0
+    graphicsSize: [20,20] # how large the plane appears
+    checkers: [40,40]     # how many checkers are on the plane
+#lifters1:
+#    type: "lifters"
+#    mu: 1.5
+#    restitution: 0.0
+#    periods: [20000,20000,20000,20000]
+#    position: [-0.1,0,0]
+shake1:
+    type: "shake"
+    mu: 1
+    restitution: 0.0
+    period: 5000
+    position: [0, 0, 0.5]
+

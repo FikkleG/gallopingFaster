@@ -1,0 +1,25 @@
+#2021.1.13 15:08
+coding by LIMA LAB GJ
+
+add new terrain SHAKE,
+you can add it in ../config/*.terrain.yaml as:
+
+#shake1:			
+#    type: "shake"		#type
+#    mu: 0.5			
+#    restitution: 0.0
+#    period: 1000		#the true period of shaking will be 2000, double of 1000, this is lowest -> highest, a whole period alse including highest -> lowest
+#    position: [0, 5.5,1.477]	#the center of shaking
+
+
+the shape and ori of shaking plane is fixed,you can change it in code.
+and now the shaking is liner, you can change it in simulation.h/buildShake(), make shake to be whatever you want.
+
+
+#2021.1.18 12:11
+coding by LIMA LAB GJ
+
+make SHAKE control more logical
+
+you can change the parameter home_position[2] to start or stop shaking.
+
