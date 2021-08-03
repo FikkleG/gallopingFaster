@@ -39,7 +39,7 @@ ConvexMPCLocomotion::ConvexMPCLocomotion(float _dt, int _iterations_between_mpc,
   walking(int(horizonLength*1.6), Vec4<int>(0,8,4,12), Vec4<int>(12,12,12,12), "Walking"),
   walking2(int(horizonLength*1.6), Vec4<int>(0,0,0,0), Vec4<int>(16,16,16,16), "Walking2"),
   pacing(horizonLength, Vec4<int>(5,0,5,0),Vec4<int>(5,5,5,5),"Pacing"),
-  random(horizonLength, Vec4<int>(9,13,13,9), 0.4, "Flying nine thirteenths trot"),
+  random(horizonLength, Vec4<int>(7,13,13,7), 0.4, "Flying nine thirteenths trot"),
   random2(horizonLength, Vec4<int>(8,16,16,8), 0.5, "Double Trot")
 {
   _parameters = parameters;
