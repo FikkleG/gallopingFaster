@@ -116,6 +116,7 @@ class wbc_test_data_t(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if wbc_test_data_t in parents: return 0
         tmphash = (0x5a37c37e74007f59) & 0xffffffffffffffff
@@ -129,8 +130,4 @@ class wbc_test_data_t(object):
             wbc_test_data_t._packed_fingerprint = struct.pack(">Q", wbc_test_data_t._get_hash_recursive([]))
         return wbc_test_data_t._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", wbc_test_data_t._get_packed_fingerprint())[0]
 

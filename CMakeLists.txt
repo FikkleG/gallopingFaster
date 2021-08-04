@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.5)
+    project(gallopingFaster)
+    cmake_minimum_required(VERSION 3.5)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
 

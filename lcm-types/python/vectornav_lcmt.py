@@ -50,6 +50,7 @@ class vectornav_lcmt(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if vectornav_lcmt in parents: return 0
         tmphash = (0xf57906decbf7ebdc) & 0xffffffffffffffff
@@ -63,8 +64,4 @@ class vectornav_lcmt(object):
             vectornav_lcmt._packed_fingerprint = struct.pack(">Q", vectornav_lcmt._get_hash_recursive([]))
         return vectornav_lcmt._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", vectornav_lcmt._get_packed_fingerprint())[0]
 

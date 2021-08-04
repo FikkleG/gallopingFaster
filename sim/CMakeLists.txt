@@ -4,14 +4,18 @@ project(sim)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/find_qt_path.sh OUTPUT_VARIABLE CMAKE_PREFIX_PATH_1)
-SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH_1})
-# message("CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
+SET(CMAKE_PREFIX_PATH /home/gj/Qt5.12.11/5.12.11/gcc_64 )
+# message("CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+set(Qt5Core_DIR /home/gj/Qt5.12.11/5.12.11/gcc_64/lib/cmake/Qt5Core)
+set(Qt5Widgets_DIR /home/gj/Qt5.12.11/5.12.11/gcc_64/lib/cmake/Qt5Widgets)
+set(Qt5Gamepad_DIR /home/gj/Qt5.12.11/5.12.11/gcc_64/lib/cmake/Qt5Gamepad)
 if(POLICY CMP0071)
   cmake_policy(SET CMP0071 OLD)
 endif()
+set(CMAKE_PREFIX_PATH /home/gj/Qt/6.1.2/gcc_64)
 
+SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed
 set(CMAKE_AUTOMOC ON)
 # Create code from a list of Qt designer ui files

@@ -113,6 +113,7 @@ class ecat_data_t(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if ecat_data_t in parents: return 0
         tmphash = (0x2dd37f039d5cbafc) & 0xffffffffffffffff
@@ -126,8 +127,4 @@ class ecat_data_t(object):
             ecat_data_t._packed_fingerprint = struct.pack(">Q", ecat_data_t._get_hash_recursive([]))
         return ecat_data_t._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", ecat_data_t._get_packed_fingerprint())[0]
 

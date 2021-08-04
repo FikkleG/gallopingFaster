@@ -423,6 +423,7 @@ void Simulation::highLevelControl() {
 
   // wait for robot code to finish (and send LCM while waiting)
   if (_lcm) {
+  if (_lcm) {
     buildLcmMessage();
     _lcm->publish(SIM_LCM_NAME, &_simLCM);
   }

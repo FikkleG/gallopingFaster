@@ -59,6 +59,7 @@ class rc_channels_t(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if rc_channels_t in parents: return 0
         tmphash = (0x5fd71e3345a45040) & 0xffffffffffffffff
@@ -72,8 +73,4 @@ class rc_channels_t(object):
             rc_channels_t._packed_fingerprint = struct.pack(">Q", rc_channels_t._get_hash_recursive([]))
         return rc_channels_t._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", rc_channels_t._get_packed_fingerprint())[0]
 

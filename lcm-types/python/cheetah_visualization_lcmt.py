@@ -53,6 +53,7 @@ class cheetah_visualization_lcmt(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if cheetah_visualization_lcmt in parents: return 0
         tmphash = (0xe9e9209bb36f494f) & 0xffffffffffffffff
@@ -66,8 +67,4 @@ class cheetah_visualization_lcmt(object):
             cheetah_visualization_lcmt._packed_fingerprint = struct.pack(">Q", cheetah_visualization_lcmt._get_hash_recursive([]))
         return cheetah_visualization_lcmt._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", cheetah_visualization_lcmt._get_packed_fingerprint())[0]
 

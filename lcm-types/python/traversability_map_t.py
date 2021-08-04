@@ -47,6 +47,7 @@ class traversability_map_t(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if traversability_map_t in parents: return 0
         tmphash = (0x65bb5bb541c18c9) & 0xffffffffffffffff
@@ -60,8 +61,4 @@ class traversability_map_t(object):
             traversability_map_t._packed_fingerprint = struct.pack(">Q", traversability_map_t._get_hash_recursive([]))
         return traversability_map_t._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", traversability_map_t._get_packed_fingerprint())[0]
 

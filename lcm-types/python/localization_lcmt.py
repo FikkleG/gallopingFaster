@@ -47,6 +47,7 @@ class localization_lcmt(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if localization_lcmt in parents: return 0
         tmphash = (0x3c3402ee7c7bd738) & 0xffffffffffffffff
@@ -60,8 +61,4 @@ class localization_lcmt(object):
             localization_lcmt._packed_fingerprint = struct.pack(">Q", localization_lcmt._get_hash_recursive([]))
         return localization_lcmt._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", localization_lcmt._get_packed_fingerprint())[0]
 

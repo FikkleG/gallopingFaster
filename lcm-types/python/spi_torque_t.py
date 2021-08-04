@@ -50,6 +50,7 @@ class spi_torque_t(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if spi_torque_t in parents: return 0
         tmphash = (0xa847131dd865b527) & 0xffffffffffffffff
@@ -63,8 +64,4 @@ class spi_torque_t(object):
             spi_torque_t._packed_fingerprint = struct.pack(">Q", spi_torque_t._get_hash_recursive([]))
         return spi_torque_t._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", spi_torque_t._get_packed_fingerprint())[0]
 

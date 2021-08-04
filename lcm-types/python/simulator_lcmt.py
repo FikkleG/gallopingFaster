@@ -111,6 +111,7 @@ class simulator_lcmt(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if simulator_lcmt in parents: return 0
         tmphash = (0x49c5c4ff138274be) & 0xffffffffffffffff
@@ -124,8 +125,4 @@ class simulator_lcmt(object):
             simulator_lcmt._packed_fingerprint = struct.pack(">Q", simulator_lcmt._get_hash_recursive([]))
         return simulator_lcmt._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", simulator_lcmt._get_packed_fingerprint())[0]
 

@@ -47,6 +47,7 @@ class velocity_visual_t(object):
         return self
     _decode_one = staticmethod(_decode_one)
 
+    _hash = None
     def _get_hash_recursive(parents):
         if velocity_visual_t in parents: return 0
         tmphash = (0x939f71540029b78b) & 0xffffffffffffffff
@@ -60,8 +61,4 @@ class velocity_visual_t(object):
             velocity_visual_t._packed_fingerprint = struct.pack(">Q", velocity_visual_t._get_hash_recursive([]))
         return velocity_visual_t._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
-
-    def get_hash(self):
-        """Get the LCM hash of the struct"""
-        return struct.unpack(">Q", velocity_visual_t._get_packed_fingerprint())[0]
 
