@@ -57,9 +57,9 @@ void SimulationBridge::run() {
           // next robot controller run
           _iterations++;
           runRobotControl();
-          if(_iterations > 2000)
-              getAction();
-          publishState();
+          //if(_iterations > 2000)
+          //    getAction();
+          //publishState();
           break;
         case SimulatorMode::DO_NOTHING:  // the simulator is just checking to see
           // if we are alive yet

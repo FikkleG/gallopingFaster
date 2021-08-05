@@ -192,7 +192,8 @@ void ControlFSM<T>::runFSM() {
       safetyPostCheck();
     }
 
-  } else { // if ESTOP
+  } else
+  { // if ESTOP
       //printf("BILLCHEN in ESTOP \n");
 //      nextState = getNextState(nextStateName);
 //      operatingMode = FSM_OperatingMode::NORMAL;

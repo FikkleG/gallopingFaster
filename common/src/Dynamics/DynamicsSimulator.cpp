@@ -78,7 +78,6 @@ void DynamicsSimulator<T>::step(T dt, const DVec<T> &tau, T kp, T kd )
   runABA(tau);                   // dynamics algorithm
   _model.resetCalculationFlags();
   integrate(dt);                 // step forward
-  //std::cout<<"height: "<<_state.bodyPosition.z()<<std::endl;
   _model.setState(_state);
   _model.resetExternalForces();  // clear external forces
   _model.resetCalculationFlags();
