@@ -96,8 +96,8 @@ void ControlFSM<T>::runFSM() {
 
   // Check the robot state for safe operation
   operatingMode = safetyPreCheck();
-  if(iter>2000)
-      data.controlParameters->control_mode = 3.0;
+  //if(iter>2000)
+  //    data.controlParameters->control_mode = 3.0;
   if(data.controlParameters->use_rc){
     int rc_mode = data._desiredStateCommand->rcCommand->mode;
     if(rc_mode == RC_mode::OFF){
