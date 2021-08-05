@@ -401,7 +401,7 @@ void Simulation::highLevelControl() {
   _imuSimulator->updateVectornav(_simulator->getState(),
                                    _simulator->getDState(),
                                    &_sharedMemory().simToRobot.vectorNav);
-  _simulator->getState().print();
+  //_simulator->getState().print();
 
   // send leg data to robot
   if (_robot == RobotType::MINI_CHEETAH) {
