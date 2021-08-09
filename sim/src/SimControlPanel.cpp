@@ -134,10 +134,7 @@ SimControlPanel::SimControlPanel(QWidget* parent)
 
   // subscribe mc debug
   _miniCheetahDebugLCM.subscribe("leg_control_data", &SimControlPanel::handleSpiDebug, this);
-  _miniCheetahDebugLCMThread = std::thread([&](){
-   for(;;)
-     _miniCheetahDebugLCM.handle();
-  });
+  _miniCheetahDebugLCMThread = std::thread([&](){for(;;)_miniCheetahDebugLCM.handle();});
 
 }
 
