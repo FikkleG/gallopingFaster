@@ -340,23 +340,24 @@ void SimControlPanel::errorCallback(std::string errorMessage) {
 /*!
  * Start a simulation/robot run
  */
-void SimControlPanel::on_startButton_clicked() {
+void SimControlPanel::on_startButton_clicked()
+{
   // get robot type
   RobotType robotType;
-
-  if (ui->cheetah3Button->isChecked()) {
+  if (ui->cheetah3Button->isChecked())
     robotType = RobotType::CHEETAH_3;
-  } else if (ui->miniCheetahButton->isChecked()) {
+  else if (ui->miniCheetahButton->isChecked())
     robotType = RobotType::MINI_CHEETAH;
-  } else {
+  else
+  {
     createErrorMessage("Error: you must select a robot");
     return;
   }
 
   // get run type
-  if (!ui->simulatorButton->isChecked() && !ui->robotButton->isChecked()) {
-    createErrorMessage(
-        "Error: you must select either robot or simulation mode");
+  if (!ui->simulatorButton->isChecked() && !ui->robotButton->isChecked())
+  {
+    createErrorMessage("Error: you must select either robot or simulation mode");
     return;
   }
 
@@ -372,63 +373,64 @@ void SimControlPanel::on_startButton_clicked() {
   {
     // run a simulation
 
-    try {
+    try
+    {
       printf("[SimControlPanel] Initialize simulator...\n");
       _simulation = new Simulation(robotType, _graphicsWindow, _parameters, _userParameters,
         // this will allow the simulation thread to poke us when there's a state change
-        [this](){
-        QMetaObject::invokeMethod(this,"update_ui");
-      });
+        [this](){QMetaObject::invokeMethod(this,"update_ui");});
       loadSimulationParameters(_simulation->getSimParams());
       loadRobotParameters(_simulation->getRobotParams());
 
       // terrain
       printf("[SimControlParameter] Load terrain...\n");
       _simulation->loadTerrainFile(_terrainFileName);
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
       createErrorMessage("FATAL: Exception thrown during simulator setup\n" + std::string(e.what()));
       throw e;
     }
 
 
-
-
     // start sim
-    _simThread = std::thread(
-
+    _simThread = std::thread
+    (
       // simulation function
-      [this]() {
-
+      [this]()
+      {
         // error callback function
-        std::function<void(std::string)> error_function = [this](std::string str) {
+        std::function<void(std::string)> error_function = [this](std::string str)
+        {
           // Qt will take care of doing the call in the UI event loop
-          QMetaObject::invokeMethod(this, [=]() {
-            this->errorCallback(str);
-          });
+          QMetaObject::invokeMethod(this, [=](){this->errorCallback(str);});
         };
-
-        try {
+        try
+        {
           // pass error callback to simulator
           _simulation->runAtSpeed(error_function);
-        } catch (std::exception &e) {
+        }
+        catch (std::exception &e)
+        {
           // also catch exceptions
           error_function("Exception thrown in simulation thread: " + std::string(e.what()));
         }
 
-      });
+      }
+    );
 
     // graphics start
-    _graphicsWindow->setAnimating(true);
-  } else {
+    //_graphicsWindow->setAnimating(true);
+  }
+  else
+  {
     printf("[SimControlPanel] Init Robot Interface...\n");
     _interfaceTaskManager = new PeriodicTaskManager;
-    _robotInterface =
-        new RobotInterface(robotType, _graphicsWindow, _interfaceTaskManager, _userParameters);
+    _robotInterface = new RobotInterface(robotType, _graphicsWindow, _interfaceTaskManager, _userParameters);
     loadRobotParameters(_robotInterface->getParams());
     _robotInterface->startInterface();
     _graphicsWindow->setAnimating(true);
   }
-
   _state = SimulationWindowState::RUNNING;
   updateUiEnable();
 }
@@ -436,15 +438,19 @@ void SimControlPanel::on_startButton_clicked() {
 /*!
  * Stop the currently running simulation or robot connection
  */
-void SimControlPanel::on_stopButton_clicked() {
-  if (_simulation) {
+void SimControlPanel::on_stopButton_clicked()
+{
+  if (_simulation)
+  {
     _simulation->stop();
     _simThread.join();
-  } else {
-    _robotInterface->stopInterface();
   }
+  else
+    _robotInterface->stopInterface();
 
-  if (_graphicsWindow) {
+
+  if (_graphicsWindow)
+  {
     _graphicsWindow->setAnimating(false);
     _graphicsWindow->hide();
   }
@@ -468,8 +474,8 @@ void SimControlPanel::on_stopButton_clicked() {
 /*!
  * Populate the simulator qtable parameters
  */
-void SimControlPanel::loadSimulationParameters(
-    SimulatorControlParameters& params) {
+void SimControlPanel::loadSimulationParameters(SimulatorControlParameters& params)
+{
   _ignoreTableCallbacks = true;
   updateQtableWithParameters(params, *ui->simulatorTable);
   _ignoreTableCallbacks = false;
@@ -478,7 +484,8 @@ void SimControlPanel::loadSimulationParameters(
 /*!
  * Populate the robot qtable parameters
  */
-void SimControlPanel::loadRobotParameters(RobotControlParameters& params) {
+void SimControlPanel::loadRobotParameters(RobotControlParameters& params)
+{
   _ignoreTableCallbacks = true;
   updateQtableWithParameters(params, *ui->robotTable);
   _ignoreTableCallbacks = false;
@@ -487,7 +494,8 @@ void SimControlPanel::loadRobotParameters(RobotControlParameters& params) {
 /*!
  * Populate the robot qtable parameters
  */
-void SimControlPanel::loadUserParameters(ControlParameters& params) {
+void SimControlPanel::loadUserParameters(ControlParameters& params)
+{
   _ignoreTableCallbacks = true;
   updateQtableWithParameters(params, *ui->userControlTable);
   _ignoreTableCallbacks = false;
@@ -496,8 +504,10 @@ void SimControlPanel::loadUserParameters(ControlParameters& params) {
 /*!
  * Attempt to reset the joystick if a new one is connected
  */
-void SimControlPanel::on_joystickButton_clicked() {
-  if(isRunning()) {
+void SimControlPanel::on_joystickButton_clicked()
+{
+  if(isRunning())
+  {
     _graphicsWindow->resetGameController();
     JoystickTestWindow* window = new JoystickTestWindow(_graphicsWindow->getGameController());
     window->exec();
@@ -505,14 +515,16 @@ void SimControlPanel::on_joystickButton_clicked() {
   }
 }
 
-void SimControlPanel::on_driverButton_clicked() {
+void SimControlPanel::on_driverButton_clicked()
+{
   _mcDebugWindow.show();
 }
 
 /*!
  * Respond to a change in the simulator table.
  */
-void SimControlPanel::on_simulatorTable_cellChanged(int row, int column) {
+void SimControlPanel::on_simulatorTable_cellChanged(int row, int column)
+{
   if (_ignoreTableCallbacks) return;
 
   // we only allow values to change, which are in column 1
@@ -569,7 +581,8 @@ void SimControlPanel::on_simulatorTable_cellChanged(int row, int column) {
 /*!
  * Save simulation config to file
  */
-void SimControlPanel::on_saveSimulatorButton_clicked() {
+void SimControlPanel::on_saveSimulatorButton_clicked()
+{
   QString fileName = QFileDialog::getSaveFileName(
       nullptr, ("Save Simulator Table Values"), "../config", "All Files (*)");
   if (fileName == nullptr || fileName == "") {

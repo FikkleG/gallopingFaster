@@ -36,7 +36,8 @@
  * It does not include the graphics window: this must be set with the setWindow
  * method
  */
-class Simulation {
+class Simulation
+{
   friend class SimControlPanel;
   public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -47,9 +48,7 @@ class Simulation {
   /*!
    * Explicitly set the state of the robot
    */
-  void setRobotState(FBModelState<double>& state) {
-    _simulator->setState(state);
-  }
+  void setRobotState(FBModelState<double>& state){_simulator->setState(state);}
 
   void step(double dt, double dtLowLevelControl, double dtHighLevelControl);
 
@@ -70,6 +69,7 @@ class Simulation {
                         bool transparent = true);
 
   void lowLevelControl();
+
   void highLevelControl();
 
   /*!
@@ -83,13 +83,15 @@ class Simulation {
                             ControlParameterValueKind kind,
                             bool isUser);
 
-  void resetSimTime() {
+  void resetSimTime()
+  {
     _currentSimTime = 0.;
     _timeOfNextLowLevelControl = 0.;
     _timeOfNextHighLevelControl = 0.;
   }
 
-  ~Simulation() {
+  ~Simulation()
+  {
     delete _simulator;
     delete _robotDataSimulator;
     delete _imuSimulator;
@@ -99,11 +101,13 @@ class Simulation {
 
   const FBModelState<double>& getRobotState() { return _simulator->getState(); }
 
-  void stop() {
+  void stop()
+  {
     _running = false;  // kill simulation loop
     _wantStop = true;  // if we're still trying to connect, this will kill us
 
-    if (_connected) {
+    if (_connected)
+    {
       _sharedMemory().simToRobot.mode = SimulatorMode::EXIT;
       _sharedMemory().simulatorIsDone();
     }
@@ -114,7 +118,7 @@ class Simulation {
   RobotControlParameters& getRobotParams() { return _robotParams; }
   ControlParameters& getUserParams() { return _userParams; }
 
-  bool isRobotConnected() { return _connected; }
+  bool isRobotConnected() const { return _connected; }
 
   void firstRun();
   void buildLcmMessage();
@@ -143,8 +147,8 @@ class Simulation {
  private:
   void handleControlError();
   Graphics3D* _window = nullptr;
-
-  std::mutex _robotMutex;
+  bool isvirual = true;
+  //std::mutex _robotMutex;
   SharedMemoryObject<SimulatorSyncronizedMessage> _sharedMemory;
   ImuSimulator<double>* _imuSimulator = nullptr;
   SimulatorControlParameters& _simParams;

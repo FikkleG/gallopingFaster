@@ -5,41 +5,45 @@
 #include <unistd.h>
 #include "ControlParameters/SimulatorParameters.h"
 
-RobotInterface::RobotInterface(RobotType robotType, Graphics3D *gfx,
-                               PeriodicTaskManager *tm, ControlParameters& userParameters)
-    : PeriodicTask(tm, ROBOT_INTERFACE_UPDATE_PERIOD, "robot-interface"),
-      _lcm(getLcmUrl(255)),
-      _userParameters(userParameters) {
+RobotInterface::RobotInterface(RobotType robotType, Graphics3D *gfx, PeriodicTaskManager *tm, ControlParameters& userParameters)
+    : PeriodicTask(tm, ROBOT_INTERFACE_UPDATE_PERIOD, "robot-interface"), _lcm(getLcmUrl(255)), _userParameters(userParameters)
+{
   _parameter_request_lcmt.requestNumber = 0;
   _gfx = gfx;
   _robotType = robotType;
   printf("[RobotInterface] Load parameters...\n");
-  if (_robotType == RobotType::MINI_CHEETAH) {
-    _controlParameters.initializeFromYamlFile(getConfigDirectoryPath() +
-                                              MINI_CHEETAH_DEFAULT_PARAMETERS);
-  } else if (_robotType == RobotType::CHEETAH_3) {
-    _controlParameters.initializeFromYamlFile(getConfigDirectoryPath() +
-                                              CHEETAH_3_DEFAULT_PARAMETERS);
-  } else {
+  if (_robotType == RobotType::MINI_CHEETAH)
+    _controlParameters.initializeFromYamlFile(getConfigDirectoryPath() + MINI_CHEETAH_DEFAULT_PARAMETERS);
+  else if (_robotType == RobotType::CHEETAH_3)
+    _controlParameters.initializeFromYamlFile(getConfigDirectoryPath() + CHEETAH_3_DEFAULT_PARAMETERS);
+  else
     assert(false);
-  }
 
-  if (!_controlParameters.isFullyInitialized()) {
+
+  if (!_controlParameters.isFullyInitialized())
+  {
     printf("Not all robot control parameters were initialized. Missing:\n%s\n",
            _controlParameters.generateUnitializedList().c_str());
     throw std::runtime_error("not all parameters initialized from ini file");
   }
   printf("[RobotInterface] Init LCM\n");
+
   printf("[RobotInterface] Init graphics\n");
+
   Vec4<float> robotColor;
   robotColor << 0.6, 0.2, 0.2, 1.0;
-  _robotID = _robotType == RobotType::MINI_CHEETAH ? gfx->setupMiniCheetah(robotColor, true, false)
-                                                   : gfx->setupCheetah3(robotColor, true, false);
+
+  _robotID = _robotType == RobotType::MINI_CHEETAH ? gfx->setupMiniCheetah(robotColor, true, false) : gfx->setupCheetah3(robotColor, true, false);
+
   printf("draw list has %lu items\n", _gfx->_drawList._kinematicXform.size());
+
   _gfx->_drawList._visualizationData = &_visualizationData;
+
   Checkerboard checker(10, 10, 10, 10);
   uint64_t floorID = _gfx->_drawList.addCheckerboard(checker, true);
+
   _gfx->_drawList.updateCheckerboard(0, floorID);
+
   _gfx->_drawList.buildDrawList();
 
   _lcm.subscribe("interface_response", &RobotInterface::handleControlParameter,
@@ -53,9 +57,8 @@ RobotInterface::RobotInterface(RobotType robotType, Graphics3D *gfx,
   _model = _quadruped.buildModel();
   _simulator = new DynamicsSimulator<double>(_model, false);
   DVec<double> zero12(12);
-  for (u32 i = 0; i < 12; i++) {
+  for (u32 i = 0; i < 12; i++)
     zero12[i] = 0.;
-  }
 
   _fwdKinState.q = zero12;
   _fwdKinState.qd = zero12;
@@ -63,12 +66,12 @@ RobotInterface::RobotInterface(RobotType robotType, Graphics3D *gfx,
 
 void RobotInterface::handleVisualizationData(
     const lcm::ReceiveBuffer *rbuf, const std::string &chan,
-    const cheetah_visualization_lcmt *msg) {
+    const cheetah_visualization_lcmt *msg)
+{
   (void)rbuf;
   (void)chan;
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++)
     _fwdKinState.bodyPosition[i] = msg->x[i];
-  }
 
   for (int i = 0; i < 4; i++) {
     _fwdKinState.bodyOrientation[i] = msg->quat[i];
@@ -82,8 +85,10 @@ void RobotInterface::handleVisualizationData(
   _simulator->forwardKinematics();
 }
 
-void RobotInterface::run() {
-  if (_gfx) {
+void RobotInterface::run()
+{
+  if (_gfx)
+  {
     _gfx->_drawList.updateRobotFromModel(*_simulator, _robotID, true);
     _gfx->update();
     _gfx->getDriverCommand().get(&_gamepad_lcmt);
@@ -95,15 +100,18 @@ using namespace std::chrono_literals;
 
 void RobotInterface::sendControlParameter(const std::string &name,
                                           ControlParameterValue value,
-                                          ControlParameterValueKind kind, bool isUser) {
-  if (_pendingControlParameterSend) {
+                                          ControlParameterValueKind kind, bool isUser)
+ {
+  if (_pendingControlParameterSend)
+  {
     printf(
         "[ERROR] trying to send control parameter while a send is in progress, "
         "ignoring!\n");
     return;
   }
   _pendingControlParameterSend = true;
-  for (int iteration = 0; iteration < TIMES_TO_RESEND_CONTROL_PARAM;) {
+  for (int iteration = 0; iteration < TIMES_TO_RESEND_CONTROL_PARAM;)
+  {
     // new message
     _parameter_request_lcmt.requestNumber++;
 
@@ -133,10 +141,12 @@ void RobotInterface::sendControlParameter(const std::string &name,
             "wakeup %d bad? %d\n",
             name.c_str(), iteration, _waitingForLcmResponse, _lcmResponseBad);
         usleep(100000);  // sleep a bit to let other bad sends happen
-      } else {
-        iteration++;
       }
-    } else {
+      else
+        iteration++;
+    }
+    else
+    {
       _waitingForLcmResponse = false;
       // fail!
       printf(
@@ -154,7 +164,8 @@ void RobotInterface::handleControlParameter(
     const control_parameter_respones_lcmt *msg) {
   (void)rbuf;
   (void)chan;
-  if (!_waitingForLcmResponse) {
+  if (!_waitingForLcmResponse)
+  {
     printf(
         "[RobotInterface] Got a control parameter response when we weren't "
         "expecting one, ignoring it!\n");
@@ -173,24 +184,28 @@ void RobotInterface::handleControlParameter(
   }
 }
 
-void RobotInterface::startInterface() {
+void RobotInterface::startInterface()
+{
   _running = true;
   this->start();
   _lcmThread = std::thread(&RobotInterface::lcmHandler, this);
   printf("[RobotInterface] Send parameters to robot...\n");
-  for (auto &kv : _controlParameters.collection._map) {
+  for (auto &kv : _controlParameters.collection._map)
+  {
     sendControlParameter(kv.first, kv.second->get(kv.second->_kind),
                          kv.second->_kind, false);
   }
 
-  for (auto &kv : _userParameters.collection._map) {
+  for (auto &kv : _userParameters.collection._map)
+  {
     sendControlParameter(kv.first, kv.second->get(kv.second->_kind),
                          kv.second->_kind, true);
   }
   
 }
 
-void RobotInterface::stopInterface() {
+void RobotInterface::stopInterface()
+{
   printf("stopInterface\n");
   _running = false;
   _taskManager.stopAll();
@@ -199,8 +214,10 @@ void RobotInterface::stopInterface() {
   printf("lcmthread joined\n");
 }
 
-void RobotInterface::lcmHandler() {
-  while (_running) {
+void RobotInterface::lcmHandler()
+{
+  while (_running)
+  {
     _lcm.handleTimeout(1000);
   }
 }
