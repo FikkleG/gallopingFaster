@@ -1,0 +1,13 @@
+struct feedBack_t
+{
+    boolean isFirst; //true to tell controler this is the initial env and robort is already
+
+    boolean isCheater;
+
+    cheaterState trueInfo;
+
+    spi_data_t spiData;
+
+    vectornav_lcmt navInfo; //one env info/simlulate result from the simulation
+}
+

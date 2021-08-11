@@ -1,0 +1,8 @@
+struct cheaterState
+{
+  float orientation[4];
+  float position[3];
+  float omegaBody[3];
+  float vBody[3];
+  float acceleration[3];
+}

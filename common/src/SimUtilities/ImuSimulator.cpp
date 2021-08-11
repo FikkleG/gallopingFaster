@@ -37,32 +37,31 @@ void ImuSimulator<T>::computeAcceleration(
 template <typename T>
 void ImuSimulator<T>::updateVectornav(
     const FBModelState<T> &robotState,
-    const FBModelStateDerivative<T> &robotStateD, VectorNavData *data) {
+    const FBModelStateDerivative<T> &robotStateD, VectorNavData *data)
+{
   // body orientation
-  RotMat<float> R_body = quaternionToRotationMatrix(
-      robotState.bodyOrientation.template cast<float>());
+  RotMat<float> R_body = quaternionToRotationMatrix(robotState.bodyOrientation.template cast<float>());
 
   Quat<float> ori_quat;
 
   // acceleration
-  computeAcceleration(robotState, robotStateD, data->accelerometer,
-                      _vectornavAccelerometerDistribution, R_body);
+  computeAcceleration(robotState, robotStateD, data->accelerometer,_vectornavAccelerometerDistribution, R_body);
 
   // gyro
   fillEigenWithRandom(data->gyro, _mt, _vectornavGyroDistribution);
-  data->gyro +=
-      robotState.bodyVelocity.template head<3>().template cast<float>();
+  data->gyro += robotState.bodyVelocity.template head<3>().template cast<float>();
 
   // quaternion
-  if (_vectorNavOrientationNoise) {
+  if (_vectorNavOrientationNoise)
+  {
     Vec3<float> omegaNoise;
     fillEigenWithRandom(omegaNoise, _mt, _vectornavQuatDistribution);
     Quat<float> floatQuat = robotState.bodyOrientation.template cast<float>();
     ori_quat = integrateQuat(floatQuat, omegaNoise, 1.0f);
 
-  } else {
-    ori_quat = robotState.bodyOrientation.template cast<float>();
   }
+  else
+    ori_quat = robotState.bodyOrientation.template cast<float>();
   data->quat[3] = ori_quat[0];
   data->quat[0] = ori_quat[1];
   data->quat[1] = ori_quat[2];
@@ -75,7 +74,8 @@ void ImuSimulator<T>::updateVectornav(
 template <typename T>
 void ImuSimulator<T>::updateCheaterState(
     const FBModelState<T> &robotState,
-    const FBModelStateDerivative<T> &robotStateD, CheaterState<T> &state) {
+    const FBModelStateDerivative<T> &robotStateD, CheaterState<T> &state)
+{
   RotMat<T> R_body = quaternionToRotationMatrix(robotState.bodyOrientation);
   state.acceleration = (R_body * Vec3<T>(0, 0, 9.81)) +
                        spatial::spatialToLinearAcceleration(

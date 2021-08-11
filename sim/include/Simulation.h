@@ -27,6 +27,8 @@
 
 #include <lcm/lcm-cpp.hpp>
 #include "simulator_lcmt.hpp"
+#include "control_t.hpp"
+#include "feedBack_t.hpp"
 
 #define SIM_LCM_NAME "simulator_state"
 
@@ -36,8 +38,11 @@
  * It does not include the graphics window: this must be set with the setWindow
  * method
  */
+
+
 class Simulation
 {
+
   friend class SimControlPanel;
   public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -144,10 +149,11 @@ class Simulation
       }
   }
 
- private:
+    SpiCommand _spiCommand;
+private:
   void handleControlError();
   Graphics3D* _window = nullptr;
-  bool isvirual = true;
+  bool isvirual = false;
   //std::mutex _robotMutex;
   SharedMemoryObject<SimulatorSyncronizedMessage> _sharedMemory;
   ImuSimulator<double>* _imuSimulator = nullptr;
@@ -164,8 +170,7 @@ class Simulation
   DynamicsSimulator<double>* _simulator = nullptr;
   DynamicsSimulator<double>* _robotDataSimulator = nullptr;
   std::vector<ActuatorModel<double>> _actuatorModels;
-  SpiCommand _spiCommand;
-  SpiData _spiData;
+    SpiData _spiData;
   SpineBoard _spineBoards[4];
   TI_BoardControl _tiBoards[4];
   RobotType _robot;
@@ -188,5 +193,18 @@ class Simulation
   s64 _highLevelIterations = 0;
   simulator_lcmt _simLCM;
 };
+
+class Handler
+        {
+        public:
+            Simulation *sim;
+            ~Handler() {}
+            void handleMessage(const lcm::ReceiveBuffer* rbuf,const std::string& chan,const control_t* msg)
+            {
+                sim->_spiCommand.makeSpiCommand(msg->controlInfo);
+            }
+        };
+
+
 
 #endif  // PROJECT_SIMULATION_H

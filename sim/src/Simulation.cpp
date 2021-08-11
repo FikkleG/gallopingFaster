@@ -32,16 +32,17 @@ Simulation::Simulation(RobotType robot, Graphics3D* window, SimulatorControlPara
   }
 
   // init LCM
-  if (_simParams.sim_state_lcm)
-  {
     printf("[Simulation] Setup LCM...\n");
-    _lcm = new lcm::LCM(getLcmUrl(_simParams.sim_lcm_ttl));
+    _lcm = new lcm::LCM();
     if (!_lcm->good())
     {
       printf("[ERROR] Failed to set up LCM\n");
       throw std::runtime_error("lcm bad");
     }
-  }
+    Handler handlerOb;
+    handlerOb.sim = this;
+    _lcm->subscribe("control", &Handler::handleMessage, &handlerOb);
+
 
   // init quadruped info
   printf("[Simulation] Build quadruped...\n");
@@ -68,7 +69,7 @@ Simulation::Simulation(RobotType robot, Graphics3D* window, SimulatorControlPara
                              : window->setupCheetah3(seColor, false, false);
   }
   else
-      _window->close();
+      _window->hide();
 
   // init rigid body dynamics
   printf("[Simulation] Build rigid body model...\n");
@@ -262,34 +263,10 @@ void Simulation::handleControlError() {
  */
 void Simulation::firstRun()
 {
-  // connect to robot
-  //_robotMutex.lock();
-  _sharedMemory().simToRobot.mode = SimulatorMode::DO_NOTHING;
-  _sharedMemory().simulatorIsDone();
-
-  printf("[Simulation] Waiting for robot...\n");
-
-  // this loop will check to see if the robot is connected at 10 Hz
-  // doing this in a loop allows us to click the "stop" button in the GUI
-  // and escape from here before the robot code connects, if needed
-  while (!_sharedMemory().tryWaitForRobot())
-  {
-    if (_wantStop)
-      return;
-    usleep(100000);
-  }
+  _lcm->handle();
   printf("Success! the robot is alive\n");
   _connected = true;
   _uiUpdate();
-  //_robotMutex.unlock();
-
-  // send all control parameters
-  printf("[Simulation] Send robot control parameters to robot...\n");
-  for (auto& kv : _robotParams.collection._map)
-    sendControlParameter(kv.first, kv.second->get(kv.second->_kind), kv.second->_kind, false);
-
-  for (auto& kv : _userParams.collection._map)
-    sendControlParameter(kv.first, kv.second->get(kv.second->_kind), kv.second->_kind, true);
 }
 
 /*!
@@ -401,51 +378,44 @@ void Simulation::highLevelControl()
       _sharedMemory().simToRobot.gamepadCommand.applyDeadband(_simParams.game_controller_deadband);
   }
 
-  // send IMU data to robot:
-  _imuSimulator->updateCheaterState(_simulator->getState(),_simulator->getDState(),_sharedMemory().simToRobot.cheaterState);
-  _imuSimulator->updateVectornav(_simulator->getState(),_simulator->getDState(), &_sharedMemory().simToRobot.vectorNav);
-  //_simulator->getState().print();
+  // send data to robot
 
-  // send leg data to robot
-  if (_robot == RobotType::MINI_CHEETAH)
-    _sharedMemory().simToRobot.spiData = _spiData;
+  CheaterState<double> cS;
+  VectorNavData vN;
+
+  _imuSimulator->updateCheaterState(_simulator->getState(),_simulator->getDState(),cS);
+  _imuSimulator->updateVectornav(_simulator->getState(),_simulator->getDState(), &vN);
+
+
+  if(_robot == RobotType::MINI_CHEETAH)
+  {
+      feedBack_t fb;
+      fb.isCheater = false;
+      fb.isFirst = false;
+      _spiData.makeSpiData(&fb.spiData);
+      vN.makeVectorNavData(&fb.navInfo);
+      cS.makeCheaterState(&fb.trueInfo);
+      _lcm->publish("feedback",&fb);
+  }
   else if (_robot == RobotType::CHEETAH_3)
   {
-    for (int i = 0; i < 4; i++)
-      _sharedMemory().simToRobot.tiBoardData[i] = *_tiBoards[i].data;
+      //todo
   }
   else
-    assert(false);
+      assert(false);
 
-  // signal to the robot that it can start running
-  // the _robotMutex is used to prevent qt (which runs in its own thread) from
-  // sending a control parameter while the robot code is already running.
-  //_robotMutex.lock();
-  _sharedMemory().simToRobot.mode = SimulatorMode::RUN_CONTROLLER;
-  _sharedMemory().simulatorIsDone();
+
 
   // wait for robot code to finish (and send LCM while waiting)
-  if (_lcm)
-  {
-    buildLcmMessage();
-    _lcm->publish(SIM_LCM_NAME, &_simLCM);
-  }
-
-  // first make sure we haven't killed the robot code
-  if (_wantStop) return;
-
-  // next try waiting at most 1 second:
-  _sharedMemory().waitForRobot();
-
-  //_robotMutex.unlock();
+  buildLcmMessage();
+  _lcm->publish(SIM_LCM_NAME, &_simLCM);
 
   // update
   if (_robot == RobotType::MINI_CHEETAH)
-    _spiCommand = _sharedMemory().robotToSim.spiCommand;
+    _lcm->handle();
   else if (_robot == RobotType::CHEETAH_3)
   {
-    for (int i = 0; i < 4; i++)
-      _tiBoards[i].command = _sharedMemory().robotToSim.tiBoardCommand[i];
+    //todo
   }
   else
     assert(false);
@@ -453,7 +423,8 @@ void Simulation::highLevelControl()
   _highLevelIterations++;
 }
 
-void Simulation::buildLcmMessage() {
+void Simulation::buildLcmMessage()
+{
   _simLCM.time = _currentSimTime;
   _simLCM.timesteps = _highLevelIterations;
   auto& state = _simulator->getState();
@@ -464,16 +435,17 @@ void Simulation::buildLcmMessage() {
   Vec3<double> omega = Rbody.transpose() * state.bodyVelocity.head<3>();
   Vec3<double> v = Rbody.transpose() * state.bodyVelocity.tail<3>();
 
-  for (size_t i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 4; i++)
     _simLCM.quat[i] = state.bodyOrientation[i];
-  }
 
-  for (size_t i = 0; i < 3; i++) {
+  for (size_t i = 0; i < 3; i++)
+  {
     _simLCM.vb[i] = state.bodyVelocity[i + 3];  // linear velocity in body frame
     _simLCM.rpy[i] = rpy[i];
-    for (size_t j = 0; j < 3; j++) {
+
+    for (size_t j = 0; j < 3; j++)
       _simLCM.R[i][j] = Rbody(i, j);
-    }
+
     _simLCM.omegab[i] = state.bodyVelocity[i];
     _simLCM.omega[i] = omega[i];
     _simLCM.p[i] = state.bodyPosition[i];
@@ -481,8 +453,10 @@ void Simulation::buildLcmMessage() {
     _simLCM.vbd[i] = dstate.dBodyVelocity[i + 3];
   }
 
-  for (size_t leg = 0; leg < 4; leg++) {
-    for (size_t joint = 0; joint < 3; joint++) {
+  for (int leg = 0; leg < 4; leg++)
+  {
+      for (int joint = 0; joint < 3; joint++)
+    {
       _simLCM.q[leg][joint] = state.q[leg * 3 + joint];
       _simLCM.qd[leg][joint] = state.qd[leg * 3 + joint];
       _simLCM.qdd[leg][joint] = dstate.qdd[leg * 3 + joint];

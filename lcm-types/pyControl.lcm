@@ -1,0 +1,9 @@
+struct control_t
+{
+    boolean reset; //true to reset the simulation env
+
+    boolean visual; //true to tell simulation show the graph
+
+    spi_command_t controlInfo; //one control to robort
+
+}

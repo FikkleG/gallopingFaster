@@ -1,4 +1,5 @@
-struct vectornav_lcmt {
+struct vectornav_lcmt
+{
    float q[4];
    float w[3];
    float a[3];
