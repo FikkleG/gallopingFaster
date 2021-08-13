@@ -20,19 +20,16 @@ template <typename T>
 FSM_State_Locomotion<T>::FSM_State_Locomotion(ControlFSMData<T>* _controlFSMData)
     : FSM_State<T>(_controlFSMData, FSM_StateName::LOCOMOTION, "LOCOMOTION")
 {
-  if(_controlFSMData->_quadruped->_robotType == RobotType::MINI_CHEETAH){
+  if(_controlFSMData->_quadruped->_robotType == RobotType::MINI_CHEETAH)
     cMPCOld = new ConvexMPCLocomotion(_controlFSMData->controlParameters->controller_dt,
         40 / (1000. * _controlFSMData->controlParameters->controller_dt),
         _controlFSMData->userParameters);
-
-  }else if(_controlFSMData->_quadruped->_robotType == RobotType::CHEETAH_3){
+  else if(_controlFSMData->_quadruped->_robotType == RobotType::CHEETAH_3)
     cMPCOld = new ConvexMPCLocomotion(_controlFSMData->controlParameters->controller_dt,
         30 / (1000. * _controlFSMData->controlParameters->controller_dt),
         _controlFSMData->userParameters);
-
-  }else{
+  else
     assert(false);
-  }
 
 
 //  this->turnOnAllSafetyChecks();
@@ -48,7 +45,8 @@ FSM_State_Locomotion<T>::FSM_State_Locomotion(ControlFSMData<T>* _controlFSMData
 }
 
 template <typename T>
-void FSM_State_Locomotion<T>::onEnter() {
+void FSM_State_Locomotion<T>::onEnter()
+{
   // Default is to not transition
   this->nextStateName = this->stateName;
 
@@ -64,7 +62,8 @@ void FSM_State_Locomotion<T>::onEnter() {
  */
 
 template <typename T>
-void FSM_State_Locomotion<T>::run() {
+void FSM_State_Locomotion<T>::run()
+{
     //Billchen
     //左侧LT按下，站立状态
     if(this->_data->_desiredStateCommand->returnBackGamepad()->leftTriggerAnalog)
@@ -104,7 +103,8 @@ extern rc_control_settings rc_control;
  * @return the enumerated FSM state name to transition into
  */
 template <typename T>
-FSM_StateName FSM_State_Locomotion<T>::checkTransition() {
+FSM_StateName FSM_State_Locomotion<T>::checkTransition()
+{
   // Get the next state
   iter++;
 
@@ -274,7 +274,8 @@ void FSM_State_Locomotion<T>::onExit() {
  * each stance or swing leg.
  */
 template <typename T>
-void FSM_State_Locomotion<T>::LocomotionControlStep() {
+void FSM_State_Locomotion<T>::LocomotionControlStep()
+{
   // StateEstimate<T> stateEstimate = this->_data->_stateEstimator->getResult();
 
   // Contact state logic
@@ -286,7 +287,8 @@ void FSM_State_Locomotion<T>::LocomotionControlStep() {
   Mat3<T> Kp_backup[4];
   Mat3<T> Kd_backup[4];
 
-  for(int leg(0); leg<4; ++leg){
+  for(int leg(0); leg<4; ++leg)
+  {
     pDes_backup[leg] = this->_data->_legController->commands[leg].pDes;
     vDes_backup[leg] = this->_data->_legController->commands[leg].vDes;
     Kp_backup[leg] = this->_data->_legController->commands[leg].kpCartesian;
@@ -302,13 +304,13 @@ void FSM_State_Locomotion<T>::LocomotionControlStep() {
     _wbc_data->pBody_RPY_des = cMPCOld->pBody_RPY_des;
     _wbc_data->vBody_Ori_des = cMPCOld->vBody_Ori_des;
     
-    for(size_t i(0); i<4; ++i){
+    for(size_t i(0); i<4; ++i)
+    {
       _wbc_data->pFoot_des[i] = cMPCOld->pFoot_des[i];
       _wbc_data->vFoot_des[i] = cMPCOld->vFoot_des[i];
       _wbc_data->aFoot_des[i] = cMPCOld->aFoot_des[i];
       _wbc_data->Fr_des[i] = cMPCOld->Fr_des[i]; 
     }
-    //printf("Fr_des %.2f\t%.2f\t%.2f\n",_wbc_data->Fr_des[0][0],_wbc_data->Fr_des[0][1],_wbc_data->Fr_des[0][2]);
 
     _wbc_data->contact_state = cMPCOld->contact_state;
     _wbc_ctrl->run(_wbc_data, *this->_data);
@@ -327,7 +329,8 @@ void FSM_State_Locomotion<T>::LocomotionControlStep() {
  * bouncing, as well as tracking the foot velocity during high speeds.
  */
 template <typename T>
-void FSM_State_Locomotion<T>::StanceLegImpedanceControl(int leg) {
+void FSM_State_Locomotion<T>::StanceLegImpedanceControl(int leg)
+{
   // Impedance control for the stance leg
   this->cartesianImpedanceControl(
       leg, this->footstepLocations.col(leg), Vec3<T>::Zero(),

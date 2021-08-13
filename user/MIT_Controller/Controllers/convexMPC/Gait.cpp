@@ -36,27 +36,25 @@ MixedFrequncyGait::~MixedFrequncyGait() {
   delete[] _mpc_table;
 }
 
-Vec4<float> OffsetDurationGait::getContactState() {
+Vec4<float> OffsetDurationGait::getContactState()
+{
   Array4f progress = _phase - _offsetsFloat;
 
   for(int i = 0; i < 4; i++)
   {
     if(progress[i] < 0) progress[i] += 1.;
     if(progress[i] > _durationsFloat[i])
-    {
       progress[i] = 0.;
-    }
     else
-    {
       progress[i] = progress[i] / _durationsFloat[i];
-    }
   }
 
   //printf("contact state: %.3f %.3f %.3f %.3f\n", progress[0], progress[1], progress[2], progress[3]);
   return progress.matrix();
 }
 
-Vec4<float> MixedFrequncyGait::getContactState() {
+Vec4<float> MixedFrequncyGait::getContactState()
+{
   Array4f progress = _phase;
 
   for(int i = 0; i < 4; i++) {
@@ -166,9 +164,11 @@ void OffsetDurationGait::setIterations(int iterationsPerMPC, int currentIteratio
   _phase = (float)(currentIteration % (iterationsPerMPC * _nIterations)) / (float) (iterationsPerMPC * _nIterations);
 }
 
-void MixedFrequncyGait::setIterations(int iterationsBetweenMPC, int currentIteration) {
+void MixedFrequncyGait::setIterations(int iterationsBetweenMPC, int currentIteration)
+{
   _iteration = (currentIteration / iterationsBetweenMPC);// % _nIterations;
-  for(int i = 0; i < 4; i++) {
+  for(int i = 0; i < 4; i++)
+  {
     int progress_mult = currentIteration % (iterationsBetweenMPC * _periods[i]);
     _phase[i] = ((float)progress_mult) / ((float) iterationsBetweenMPC * _periods[i]);
     //_phase[i] = (float)(currentIteration % (iterationsBetweenMPC * _periods[i])) / (float) (iterationsBetweenMPC * _periods[i]);

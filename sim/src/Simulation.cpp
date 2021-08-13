@@ -175,7 +175,8 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
 
 void Simulation::sendControlParameter(const std::string& name,
                                       ControlParameterValue value,
-                                      ControlParameterValueKind kind, bool isUser) {
+                                      ControlParameterValueKind kind, bool isUser)
+{
   ControlParameterRequest& request =
       _sharedMemory().simToRobot.controlParameterRequest;
   ControlParameterResponse& response =
@@ -198,17 +199,6 @@ void Simulation::sendControlParameter(const std::string& name,
   _robotMutex.lock();
   _sharedMemory().simToRobot.mode = SimulatorMode::RUN_CONTROL_PARAMETERS;
   _sharedMemory().simulatorIsDone();
-
-  // wait for robot code to finish
-  /* cheack if timeout or not
-  if (_sharedMemory().waitForRobotWithTimeout()) {
-  } else {
-    handleControlError();
-    request.requestNumber = response.requestNumber; // so if we come back we won't be off by 1
-    _robotMutex.unlock();
-    return;
-  }
-  */
 
   _sharedMemory().waitForRobot();
   _robotMutex.unlock();
@@ -244,7 +234,8 @@ void Simulation::handleControlError() {
  * Called before the simulator is run the first time.  It's okay to put stuff in
  * here that blocks on having the robot connected.
  */
-void Simulation::firstRun() {
+void Simulation::firstRun()
+{
   // connect to robot
   _robotMutex.lock();
   _sharedMemory().simToRobot.mode = SimulatorMode::DO_NOTHING;
@@ -271,7 +262,8 @@ void Simulation::firstRun() {
 
   // send all control parameters
   printf("[Simulation] Send robot control parameters to robot...\n");
-  for (auto& kv : _robotParams.collection._map) {
+  for (auto& kv : _robotParams.collection._map)
+  {
     sendControlParameter(kv.first, kv.second->get(kv.second->_kind),
                          kv.second->_kind, false);
   }
@@ -286,7 +278,8 @@ void Simulation::firstRun() {
  * Take a single timestep of dt seconds
  */
 void Simulation::step(double dt, double dtLowLevelControl,
-                      double dtHighLevelControl) {
+                      double dtHighLevelControl)
+{
   // Low level control (if needed)
   if (_currentSimTime >= _timeOfNextLowLevelControl) {
     lowLevelControl();
@@ -388,12 +381,17 @@ void Simulation::lowLevelControl() {
 
 
 
-void Simulation::highLevelControl() {
+void Simulation::highLevelControl()
+{
   // send joystick data to robot:
   _sharedMemory().simToRobot.gamepadCommand = _window->getDriverCommand();
   _sharedMemory().simToRobot.gamepadCommand.applyDeadband(
       _simParams.game_controller_deadband);
-
+  if(_currentSimTime > 8)
+  {
+      //_sharedMemory().simToRobot.gamepadCommand.leftStickAnalog[1] = leftoffset >= 1?1 : leftoffset;
+      //leftoffset += 0.00005;
+  }
   // send IMU data to robot:
   _imuSimulator->updateCheaterState(_simulator->getState(),
                                     _simulator->getDState(),
@@ -401,7 +399,6 @@ void Simulation::highLevelControl() {
   _imuSimulator->updateVectornav(_simulator->getState(),
                                    _simulator->getDState(),
                                    &_sharedMemory().simToRobot.vectorNav);
-  //_simulator->getState().print();
 
   // send leg data to robot
   if (_robot == RobotType::MINI_CHEETAH) {
@@ -410,9 +407,9 @@ void Simulation::highLevelControl() {
     for (int i = 0; i < 4; i++) {
       _sharedMemory().simToRobot.tiBoardData[i] = *_tiBoards[i].data;
     }
-  } else {
+  } else
     assert(false);
-  }
+
 
   // signal to the robot that it can start running
   // the _robotMutex is used to prevent qt (which runs in its own thread) from
@@ -422,7 +419,8 @@ void Simulation::highLevelControl() {
   _sharedMemory().simulatorIsDone();
 
   // wait for robot code to finish (and send LCM while waiting)
-  if (_lcm) {
+  if (_lcm)
+  {
     buildLcmMessage();
     _lcm->publish(SIM_LCM_NAME, &_simLCM);
   }
@@ -449,7 +447,8 @@ void Simulation::highLevelControl() {
   _highLevelIterations++;
 }
 
-void Simulation::buildLcmMessage() {
+void Simulation::buildLcmMessage()
+{
   _simLCM.time = _currentSimTime;
   _simLCM.timesteps = _highLevelIterations;
   auto& state = _simulator->getState();
@@ -591,9 +590,25 @@ void Simulation::runAtSpeed(std::function<void(std::string)> errorCallback, bool
       "speed %f graphics %d)...\n",
       _simParams.dynamics_dt, _simParams.low_level_dt, _simParams.high_level_dt,
       _simParams.simulation_speed, graphics);
-
+  bool neverChangeControl = false;
+  bool neverChangeGait = false;
   while (_running)
   {
+      if(neverChangeControl && _currentSimTime > 4 )
+      {
+          ControlParameterValue  va;
+          va.d = 4;
+          sendControlParameter("control_mode",va,ControlParameterValueKind::DOUBLE, false);
+          neverChangeControl = false;
+      }
+
+      if(neverChangeGait && _currentSimTime > 5)
+      {
+          ControlParameterValue  va;
+          va.d = 1;
+          sendControlParameter("cmpc_gait",va,ControlParameterValueKind::DOUBLE, true);
+          neverChangeGait = false;
+      }
     double dt = _simParams.dynamics_dt;
     double dtLowLevelControl = _simParams.low_level_dt;
     double dtHighLevelControl = _simParams.high_level_dt;

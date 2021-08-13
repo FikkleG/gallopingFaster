@@ -19,7 +19,8 @@ struct CMPC_Result {
   Vec4<T> contactPhase;
 };
 
-struct CMPC_Jump {
+struct CMPC_Jump
+{
   static constexpr int START_SEG = 6;
   static constexpr int END_SEG = 0;
   static constexpr int END_COUNT = 2;
@@ -30,15 +31,19 @@ struct CMPC_Jump {
   int last_seg_seen = 0;
   int jump_wait_counter = 0;
 
-  void debug(int seg) {
+  void debug(int seg)
+  {
     (void)seg;
     //printf("[%d] pending %d running %d\n", seg, jump_pending, jump_in_progress);
   }
 
-  void trigger_pressed(int seg, bool trigger) {
+  void trigger_pressed(int seg, bool trigger)
+  {
     (void)seg;
-    if(!pressed && trigger) {
-      if(!jump_pending && !jump_in_progress) {
+    if(!pressed && trigger)
+    {
+      if(!jump_pending && !jump_in_progress)
+      {
         jump_pending = true;
         //printf("jump pending @ %d\n", seg);
       }

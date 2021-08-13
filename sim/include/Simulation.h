@@ -143,6 +143,7 @@ class Simulation {
  private:
   void handleControlError();
   Graphics3D* _window = nullptr;
+  double leftoffset = 0;
 
   std::mutex _robotMutex;
   SharedMemoryObject<SimulatorSyncronizedMessage> _sharedMemory;

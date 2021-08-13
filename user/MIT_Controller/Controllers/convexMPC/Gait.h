@@ -27,7 +27,8 @@ protected:
 using Eigen::Array4f;
 using Eigen::Array4i;
 
-class OffsetDurationGait : public Gait {
+class OffsetDurationGait : public Gait
+{
 public:
   OffsetDurationGait(int nSegment, Vec4<int> offset, Vec4<int> durations, const std::string& name);
   ~OffsetDurationGait();
@@ -55,7 +56,8 @@ private:
 
 
 
-class MixedFrequncyGait : public Gait {
+class MixedFrequncyGait : public Gait
+{
 public:
   MixedFrequncyGait(int nSegment, Vec4<int> periods, float duty_cycle, const std::string& name);
   ~MixedFrequncyGait();

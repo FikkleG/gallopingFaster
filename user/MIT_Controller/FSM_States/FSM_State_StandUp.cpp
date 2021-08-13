@@ -26,7 +26,8 @@ _ini_foot_pos(4){
 }
 
 template <typename T>
-void FSM_State_StandUp<T>::onEnter() {
+void FSM_State_StandUp<T>::onEnter()
+{
   // Default is to not transition
   this->nextStateName = this->stateName;
 
@@ -36,9 +37,8 @@ void FSM_State_StandUp<T>::onEnter() {
   // Reset iteration counter
   iter = 0;
 
-  for(size_t leg(0); leg<4; ++leg){
+  for(size_t leg(0); leg<4; ++leg)
     _ini_foot_pos[leg] = this->_data->_legController->datas[leg].p;
-  }
 }
 
 /**
@@ -47,13 +47,15 @@ void FSM_State_StandUp<T>::onEnter() {
 template <typename T>
 void FSM_State_StandUp<T>::run() {
 
-  if(this->_data->_quadruped->_robotType == RobotType::MINI_CHEETAH) {
+  if(this->_data->_quadruped->_robotType == RobotType::MINI_CHEETAH)
+  {
     T hMax = 0.45;//0.26;
     T progress = 2 * iter * this->_data->controlParameters->controller_dt;
 
     if (progress > 1.){ progress = 1.; }
 
-    for(int i = 0; i < 4; i++) {
+    for(int i = 0; i < 4; i++)
+    {
       this->_data->_legController->commands[i].kpCartesian = Vec3<T>(650, 650, 650).asDiagonal();
       this->_data->_legController->commands[i].kdCartesian = Vec3<T>(8, 8, 8).asDiagonal();
 
@@ -62,15 +64,9 @@ void FSM_State_StandUp<T>::run() {
 //        progress*(-hMax) + (1. - progress) * _ini_foot_pos[i][2];
 //liu
         if (i < 2)
-        {
-            this->_data->_legController->commands[i].pDes[2] = progress * (-0.21)
-                                                               + (1. - progress)*_ini_foot_pos[i][2];
-        }
+            this->_data->_legController->commands[i].pDes[2] = progress * (-0.21) + (1. - progress)*_ini_foot_pos[i][2];
         else
-        {
-            this->_data->_legController->commands[i].pDes[2] = progress * (-hMax)
-                                                               + (1. - progress)*_ini_foot_pos[i][2];
-        }
+            this->_data->_legController->commands[i].pDes[2] = progress * (-hMax) + (1. - progress)*_ini_foot_pos[i][2];
         //liu
     }
   }

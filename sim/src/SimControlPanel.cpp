@@ -618,9 +618,8 @@ void SimControlPanel::on_robotTable_cellChanged(int row, int column) {
   auto cell = ui->robotTable->item(row, 0);
   std::string cellName = cell->text().toStdString();
 
-  if (cellName == "") {
+  if (cellName == "")
     return;
-  }
 
   auto& parameter = (_simulationMode ? _simulation->getRobotParams()
                                      : _robotInterface->getParams())

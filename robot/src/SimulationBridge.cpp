@@ -14,7 +14,8 @@
 /*!
  * Connect to a simulation
  */
-void SimulationBridge::run() {
+void SimulationBridge::run()
+{
   // init shared memory:
   _sharedMemory.attach(DEVELOPMENT_SIMULATOR_SHARED_MEMORY_NAME);
   _sharedMemory().init();
@@ -26,7 +27,8 @@ void SimulationBridge::run() {
   try {
     printf("[Simulation Driver] Starting main loop...\n");
     bool firstRun = true;
-    for (;;) {
+    for (;;)
+    {
       // wait for our turn to access the shared memory
       // on the first loop, this gives the simulator a chance to put stuff in
       // shared memory before we start
@@ -57,9 +59,6 @@ void SimulationBridge::run() {
           // next robot controller run
           _iterations++;
           runRobotControl();
-          //if(_iterations > 2000)
-          //    getAction();
-          //publishState();
           break;
         case SimulatorMode::DO_NOTHING:  // the simulator is just checking to see
           // if we are alive yet
@@ -86,12 +85,14 @@ void SimulationBridge::run() {
 /*!
  * This function handles a a control parameter message from the simulator
  */
-void SimulationBridge::handleControlParameters() {
+void SimulationBridge::handleControlParameters()
+{
   ControlParameterRequest& request =
       _sharedMemory().simToRobot.controlParameterRequest;
   ControlParameterResponse& response =
       _sharedMemory().robotToSim.controlParameterResponse;
-  if (request.requestNumber <= response.requestNumber) {
+  if (request.requestNumber <= response.requestNumber)
+  {
     // nothing to do!
     printf(
         "[SimulationBridge] Warning: the simulator has run a ControlParameter "
@@ -106,8 +107,10 @@ void SimulationBridge::handleControlParameters() {
   response.nParameters = _robotParams.collection._map
                              .size();  // todo don't do this every single time?
 
-  switch (request.requestKind) {
-    case ControlParameterRequestKind::SET_ROBOT_PARAM_BY_NAME: {
+  switch (request.requestKind)
+  {
+    case ControlParameterRequestKind::SET_ROBOT_PARAM_BY_NAME:
+    {
       std::string name(request.name);
       ControlParameter& param = _robotParams.collection.lookup(name);
 
@@ -171,7 +174,8 @@ void SimulationBridge::handleControlParameters() {
 
     } break;
 
-    case ControlParameterRequestKind::GET_ROBOT_PARAM_BY_NAME: {
+    case ControlParameterRequestKind::GET_ROBOT_PARAM_BY_NAME:
+    {
       std::string name(request.name);
       ControlParameter& param = _robotParams.collection.lookup(name);
 

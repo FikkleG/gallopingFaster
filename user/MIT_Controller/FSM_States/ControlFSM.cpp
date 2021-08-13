@@ -65,7 +65,8 @@ ControlFSM<T>::ControlFSM(Quadruped<T>* _quadruped,
  * Passive state and Normal operation mode.
  */
 template <typename T>
-void ControlFSM<T>::initialize() {
+void ControlFSM<T>::initialize()
+{
   // Initialize a new FSM State with the control data
   currentState = statesList.passive;
 
@@ -85,20 +86,13 @@ void ControlFSM<T>::initialize() {
  * the regular state behavior if all is normal.
  */
 template <typename T>
-void ControlFSM<T>::runFSM() {
-  // Publish state estimator data to other computer
-  //for(size_t i(0); i<3; ++i){
-    //_state_estimator.p[i] = data._stateEstimator->getResult().position[i];
-    //_state_estimator.quat[i] = data._stateEstimator->getResult().orientation[i];
-  //}
-    //_state_estimator.quat[3] = data._stateEstimator->getResult().orientation[3];
-  //state_estimator_lcm.publish("state_estimator_ctrl_pc", &_state_estimator);
-
+void ControlFSM<T>::runFSM()
+{
   // Check the robot state for safe operation
   operatingMode = safetyPreCheck();
-  //if(iter>2000)
-  //    data.controlParameters->control_mode = 3.0;
-  if(data.controlParameters->use_rc){
+
+  if(data.controlParameters->use_rc)
+  {
     int rc_mode = data._desiredStateCommand->rcCommand->mode;
     if(rc_mode == RC_mode::OFF){
         //printf("K_PASSIVE\n");
@@ -139,14 +133,17 @@ void ControlFSM<T>::runFSM() {
   }
 
   // Run the robot control code if operating mode is not unsafe
-  if (operatingMode != FSM_OperatingMode::ESTOP) {
+  if (operatingMode != FSM_OperatingMode::ESTOP)
+  {
     // Run normal controls if no transition is detected
-    if (operatingMode == FSM_OperatingMode::NORMAL) {
+    if (operatingMode == FSM_OperatingMode::NORMAL)
+    {
       // Check the current state for any transition
       nextStateName = currentState->checkTransition();
 
       // Detect a commanded transition
-      if (nextStateName != currentState->stateName) {
+      if (nextStateName != currentState->stateName)
+      {
         // Set the FSM operating mode to transitioning
         operatingMode = FSM_OperatingMode::TRANSITIONING;
 
@@ -156,22 +153,27 @@ void ControlFSM<T>::runFSM() {
         // Print transition initialized info
         //printInfo(1);
 
-      } else {
+      }
+      else
+      {
         // Run the iteration for the current state normally
         currentState->run();
       }
-    } else
+    }
+    else
         //printf("operatingMode not ESTOP, abnormal\n");
 
     // Run the transition code while transition is occuring
-    if (operatingMode == FSM_OperatingMode::TRANSITIONING) {
+    if (operatingMode == FSM_OperatingMode::TRANSITIONING)
+    {
       transitionData = currentState->transition();
 
       // Check the robot state for safe operation
       safetyPostCheck();
 
       // Run the state transition
-      if (transitionData.done) {
+      if (transitionData.done)
+      {
         // Exit the current state cleanly
         currentState->onExit();
 
@@ -187,12 +189,15 @@ void ControlFSM<T>::runFSM() {
         // Return the FSM to normal operation mode
         operatingMode = FSM_OperatingMode::NORMAL;
       }
-    } else {
+    }
+    else
+    {
       // Check the robot state for safe operation
       safetyPostCheck();
     }
 
-  } else
+  }
+  else
   { // if ESTOP
       //printf("BILLCHEN in ESTOP \n");
 //      nextState = getNextState(nextStateName);
@@ -232,10 +237,13 @@ void ControlFSM<T>::runFSM() {
  * @return the appropriate operating mode
  */
 template <typename T>
-FSM_OperatingMode ControlFSM<T>::safetyPreCheck() {
+FSM_OperatingMode ControlFSM<T>::safetyPreCheck()
+{
   // Check for safe orientation if the current state requires it
-  if (currentState->checkSafeOrientation && data.controlParameters->control_mode != K_RECOVERY_STAND) {
-    if (!safetyChecker->checkSafeOrientation()) {
+  if (currentState->checkSafeOrientation && data.controlParameters->control_mode != K_RECOVERY_STAND)
+  {
+    if (!safetyChecker->checkSafeOrientation())
+    {
       operatingMode = FSM_OperatingMode::ESTOP;
       //std::cout << "broken: Orientation Safety Ceck FAIL" << std::endl;
     }
@@ -256,16 +264,15 @@ FSM_OperatingMode ControlFSM<T>::safetyPreCheck() {
  * @return the appropriate operating mode
  */
 template <typename T>
-FSM_OperatingMode ControlFSM<T>::safetyPostCheck() {
+FSM_OperatingMode ControlFSM<T>::safetyPostCheck()
+{
   // Check for safe desired foot positions
-  if (currentState->checkPDesFoot) {
+  if (currentState->checkPDesFoot)
     safetyChecker->checkPDesFoot();
-  }
 
   // Check for safe desired feedforward forces
-  if (currentState->checkForceFeedForward) {
+  if (currentState->checkForceFeedForward)
     safetyChecker->checkForceFeedForward();
-  }
 
   // Default is to return the current operating mode
   return operatingMode;
@@ -278,7 +285,8 @@ FSM_OperatingMode ControlFSM<T>::safetyPostCheck() {
  * @return next FSM state
  */
 template <typename T>
-FSM_State<T>* ControlFSM<T>::getNextState(FSM_StateName stateName) {
+FSM_State<T>* ControlFSM<T>::getNextState(FSM_StateName stateName)
+{
   // Choose the correct FSM State by enumerated state name
   switch (stateName) {
     case FSM_StateName::INVALID:
