@@ -129,6 +129,12 @@ class Simulation
   void buildLcmMessage();
   void loadTerrainFile(const std::string& terrainFileName,
                        bool addGraphics = true);
+
+  void handleMessage(const lcm::ReceiveBuffer* rbuf,const std::string& chan,const control_t* msg)
+  {
+      _spiCommand.makeSpiCommand(msg->controlInfo);
+  }
+
   void buildShaking()
   {
       double ori[3] = {0, -0.1, 0};
@@ -197,14 +203,12 @@ private:
 class Handler
         {
         public:
-            Simulation *sim;
+            SpiCommand *spicmd;
             ~Handler() {}
             void handleMessage(const lcm::ReceiveBuffer* rbuf,const std::string& chan,const control_t* msg)
             {
-                sim->_spiCommand.makeSpiCommand(msg->controlInfo);
+                spicmd->makeSpiCommand(msg->controlInfo);
             }
         };
-
-
 
 #endif  // PROJECT_SIMULATION_H

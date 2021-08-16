@@ -18,6 +18,7 @@
 Simulation::Simulation(RobotType robot, Graphics3D* window, SimulatorControlParameters& params, ControlParameters& userParams, std::function<void(void)> uiUpdate)
     : _simParams(params), _userParams(userParams), _tau(12)
  {
+
   _uiUpdate = uiUpdate;
   // init parameters
   printf("[Simulation] Load parameters...\n");
@@ -39,9 +40,9 @@ Simulation::Simulation(RobotType robot, Graphics3D* window, SimulatorControlPara
       printf("[ERROR] Failed to set up LCM\n");
       throw std::runtime_error("lcm bad");
     }
-    Handler handlerOb;
-    handlerOb.sim = this;
-    _lcm->subscribe("control", &Handler::handleMessage, &handlerOb);
+    //Handler handlerOb;
+    //handlerOb.spicmd = &_spiCommand;
+    _lcm->subscribe("pyControl", &Simulation::handleMessage, this);
 
 
   // init quadruped info
@@ -151,13 +152,6 @@ Simulation::Simulation(RobotType robot, Graphics3D* window, SimulatorControlPara
   else
     assert(false);
 
-  // init shared memory
-  printf("[Simulation] Setup shared memory...\n");
-  _sharedMemory.createNew(DEVELOPMENT_SIMULATOR_SHARED_MEMORY_NAME, true);
-  _sharedMemory().init();
-
-  // shared memory fields:
-  _sharedMemory().simToRobot.robotType = _robot;
   if(isvirual)
     _window->_drawList._visualizationData = &_sharedMemory().robotToSim.visualizationData;
 
@@ -263,10 +257,16 @@ void Simulation::handleControlError() {
  */
 void Simulation::firstRun()
 {
-  _lcm->handle();
-  printf("Success! the robot is alive\n");
-  _connected = true;
-  _uiUpdate();
+    feedBack_t fb;
+    fb.isFirst = true;
+    fb.isCheater = false;
+    _spiData.makeSpiData(&fb.spiData);
+    _lcm->publish("pyFeedback",&fb);
+    printf("waitting for the PYrobort\n");
+    _lcm->handle();
+    printf("Success! the robot is alive\n");
+    _connected = true;
+    _uiUpdate();
 }
 
 /*!
@@ -395,7 +395,7 @@ void Simulation::highLevelControl()
       _spiData.makeSpiData(&fb.spiData);
       vN.makeVectorNavData(&fb.navInfo);
       cS.makeCheaterState(&fb.trueInfo);
-      _lcm->publish("feedback",&fb);
+      _lcm->publish("pyFeedback",&fb);
   }
   else if (_robot == RobotType::CHEETAH_3)
   {

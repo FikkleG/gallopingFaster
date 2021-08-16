@@ -219,23 +219,27 @@ TransitionData<T> FSM_State_Locomotion<T>::transition() {
 }
 
 template<typename T>
-bool FSM_State_Locomotion<T>::locomotionSafe() {
+bool FSM_State_Locomotion<T>::locomotionSafe()
+{
   auto& seResult = this->_data->_stateEstimator->getResult();
 
   const T max_roll = 80;//40;
   const T max_pitch = 80;//40;
 
-  if(std::fabs(seResult.rpy[0]) > ori::deg2rad(max_roll)) {
+  if(std::fabs(seResult.rpy[0]) > ori::deg2rad(max_roll))
+  {
     printf("Unsafe locomotion: roll is %.3f degrees (max %.3f)\n", ori::rad2deg(seResult.rpy[0]), max_roll);
     return false;
   }
 
-  if(std::fabs(seResult.rpy[1]) > ori::deg2rad(max_pitch)) {
+  if(std::fabs(seResult.rpy[1]) > ori::deg2rad(max_pitch))
+  {
     printf("Unsafe locomotion: pitch is %.3f degrees (max %.3f)\n", ori::rad2deg(seResult.rpy[1]), max_pitch);
     return false;
   }
 
-  for(int leg = 0; leg < 4; leg++) {
+  for(int leg = 0; leg < 4; leg++)
+  {
     auto p_leg = this->_data->_legController->datas[leg].p;
     if(p_leg[2] > 0) {
       printf("Unsafe locomotion: leg %d is above hip (%.3f m)\n", leg, p_leg[2]);
@@ -263,7 +267,8 @@ bool FSM_State_Locomotion<T>::locomotionSafe() {
  * Cleans up the state information on exiting the state.
  */
 template <typename T>
-void FSM_State_Locomotion<T>::onExit() {
+void FSM_State_Locomotion<T>::onExit()
+{
   // Nothing to clean up when exiting
   iter = 0;
 }
@@ -329,10 +334,7 @@ void FSM_State_Locomotion<T>::LocomotionControlStep() {
 template <typename T>
 void FSM_State_Locomotion<T>::StanceLegImpedanceControl(int leg) {
   // Impedance control for the stance leg
-  this->cartesianImpedanceControl(
-      leg, this->footstepLocations.col(leg), Vec3<T>::Zero(),
-      this->_data->controlParameters->stand_kp_cartesian,
-      this->_data->controlParameters->stand_kd_cartesian);
+  this->cartesianImpedanceControl(leg, this->footstepLocations.col(leg), Vec3<T>::Zero(),this->_data->controlParameters->stand_kp_cartesian,this->_data->controlParameters->stand_kd_cartesian);
 }
 
 // template class FSM_State_Locomotion<double>;
