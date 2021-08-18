@@ -59,8 +59,6 @@ FSM_StateName FSM_State_ImpedanceControl<T>::checkTransition() {
       // Transition instantaneously to locomotion state on request
       this->transitionData.tDuration = 0.0;
 
-      // Set the next gait in the scheduler to
-      this->_data->_gaitScheduler->gaitData._nextGait = GaitType::STAND;
       break;
 
     default:

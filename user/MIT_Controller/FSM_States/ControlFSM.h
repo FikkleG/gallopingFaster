@@ -68,7 +68,7 @@ class ControlFSM {
  public:
   ControlFSM(Quadruped<T>* _quadruped,
              StateEstimatorContainer<T>* _stateEstimator,
-             LegController<T>* _legController, GaitScheduler<T>* _gaitScheduler,
+             LegController<T>* _legController,
              DesiredStateCommand<T>* _desiredStateCommand,
              RobotControlParameters* controlParameters,
              VisualizationData* visualizationData,

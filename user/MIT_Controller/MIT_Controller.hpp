@@ -25,7 +25,6 @@ public:
 protected:
   ControlFSM<float>* _controlFSM;
   // Gait Scheduler controls the nominal contact schedule for the feet
-  GaitScheduler<float>* _gaitScheduler;
   MIT_UserParameters userParameters;
 
 };

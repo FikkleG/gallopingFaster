@@ -106,7 +106,8 @@ void LegController<T>::updateData(const SpiData* spiData) {
  * Update the "leg data" from a TI Board message
  */
 template <typename T>
-void LegController<T>::updateData(const TiBoardData* tiBoardData) {
+void LegController<T>::updateData(const TiBoardData* tiBoardData)
+{
   for (int leg = 0; leg < 4; leg++) {
     for (int joint = 0; joint < 3; joint++) {
       datas[leg].q(joint) = tiBoardData[leg].q[joint];

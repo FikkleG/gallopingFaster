@@ -18,7 +18,6 @@ struct ControlFSMData {
   Quadruped<T>* _quadruped;
   StateEstimatorContainer<T>* _stateEstimator;
   LegController<T>* _legController;
-  GaitScheduler<T>* _gaitScheduler;
   DesiredStateCommand<T>* _desiredStateCommand;
   RobotControlParameters* controlParameters;
   MIT_UserParameters* userParameters;

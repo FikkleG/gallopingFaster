@@ -22,7 +22,7 @@ FSM_State_Locomotion<T>::FSM_State_Locomotion(ControlFSMData<T>* _controlFSMData
 {
   if(_controlFSMData->_quadruped->_robotType == RobotType::MINI_CHEETAH)
     cMPCOld = new ConvexMPCLocomotion(_controlFSMData->controlParameters->controller_dt,
-        40 / (1000. * _controlFSMData->controlParameters->controller_dt),
+        20,
         _controlFSMData->userParameters);
   else if(_controlFSMData->_quadruped->_robotType == RobotType::CHEETAH_3)
     cMPCOld = new ConvexMPCLocomotion(_controlFSMData->controlParameters->controller_dt,
@@ -53,7 +53,6 @@ void FSM_State_Locomotion<T>::onEnter()
   // Reset the transition data
   this->transitionData.zero();
   cMPCOld->initialize();
-  this->_data->_gaitScheduler->gaitData._nextGait = GaitType::TROT;
   printf("[FSM LOCOMOTION] On Enter\n");
 }
 
@@ -110,8 +109,9 @@ FSM_StateName FSM_State_Locomotion<T>::checkTransition()
 
   // Switch FSM control mode
   if(locomotionSafe())
-       {
-    switch ((int)this->_data->controlParameters->control_mode) {
+  {
+    switch ((int)this->_data->controlParameters->control_mode)
+    {
       case K_LOCOMOTION:
         break;
 
@@ -172,9 +172,11 @@ FSM_StateName FSM_State_Locomotion<T>::checkTransition()
  * @return true if transition is complete
  */
 template <typename T>
-TransitionData<T> FSM_State_Locomotion<T>::transition() {
+TransitionData<T> FSM_State_Locomotion<T>::transition()
+{
   // Switch FSM control mode
-  switch (this->nextStateName) {
+  switch (this->nextStateName)
+  {
     case FSM_StateName::BALANCE_STAND:
       LocomotionControlStep();
 
@@ -204,11 +206,6 @@ TransitionData<T> FSM_State_Locomotion<T>::transition() {
           printf("BILLCHEN RINTF: transitionData.done = true \n");
       break;
 
-    case FSM_StateName::VISION:
-      this->transitionData.done = true;
-      break;
-
-
     default:
       std::cout << "[CONTROL FSM] Something went wrong in transition"
                 << std::endl;
@@ -225,19 +222,23 @@ bool FSM_State_Locomotion<T>::locomotionSafe() {
   const T max_roll = 80;//40;
   const T max_pitch = 80;//40;
 
-  if(std::fabs(seResult.rpy[0]) > ori::deg2rad(max_roll)) {
+  if(std::fabs(seResult.rpy[0]) > ori::deg2rad(max_roll))
+  {
     printf("Unsafe locomotion: roll is %.3f degrees (max %.3f)\n", ori::rad2deg(seResult.rpy[0]), max_roll);
     return false;
   }
 
-  if(std::fabs(seResult.rpy[1]) > ori::deg2rad(max_pitch)) {
+  if(std::fabs(seResult.rpy[1]) > ori::deg2rad(max_pitch))
+  {
     printf("Unsafe locomotion: pitch is %.3f degrees (max %.3f)\n", ori::rad2deg(seResult.rpy[1]), max_pitch);
     return false;
   }
 
-  for(int leg = 0; leg < 4; leg++) {
+  for(int leg = 0; leg < 4; leg++)
+  {
     auto p_leg = this->_data->_legController->datas[leg].p;
-    if(p_leg[2] > 0) {
+    if(p_leg[2] > 0)
+    {
       printf("Unsafe locomotion: leg %d is above hip (%.3f m)\n", leg, p_leg[2]);
       return false;
     }
@@ -249,7 +250,8 @@ bool FSM_State_Locomotion<T>::locomotionSafe() {
     }
 
     auto v_leg = this->_data->_legController->datas[leg].v.norm();
-    if(std::fabs(v_leg) > 19.) {
+    if(std::fabs(v_leg) > 19.)
+    {
       printf("Unsafe locomotion: leg %d is moving too quickly (%.3f m/s)\n", leg, v_leg);
       return false;
     }
@@ -263,7 +265,8 @@ bool FSM_State_Locomotion<T>::locomotionSafe() {
  * Cleans up the state information on exiting the state.
  */
 template <typename T>
-void FSM_State_Locomotion<T>::onExit() {
+void FSM_State_Locomotion<T>::onExit()
+{
   // Nothing to clean up when exiting
   iter = 0;
 }
@@ -311,7 +314,6 @@ void FSM_State_Locomotion<T>::LocomotionControlStep()
       _wbc_data->aFoot_des[i] = cMPCOld->aFoot_des[i];
       _wbc_data->Fr_des[i] = cMPCOld->Fr_des[i]; 
     }
-
     _wbc_data->contact_state = cMPCOld->contact_state;
     _wbc_ctrl->run(_wbc_data, *this->_data);
   }

@@ -3,8 +3,8 @@ ground-plane:
     mu: 0.5
     restitution: 0.0
     height: 0.0
-    graphicsSize: [80,5] # how large the plane appears
-    checkers: [160,10]     # how many checkers are on the plane
+    graphicsSize: [5,5] # how large the plane appears
+    checkers: [10,10]     # how many checkers are on the plane
 
 #mesh-1:
     type: "mesh"

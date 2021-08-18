@@ -42,7 +42,6 @@ void FSM_State_BalanceStand<T>::onEnter()
   this->transitionData.zero();
 
   // Always set the gait to be standing in this state
-  this->_data->_gaitScheduler->gaitData._nextGait = GaitType::STAND;
   _ini_body_pos = (this->_data->_stateEstimator->getResult()).position;
  std::cout<<"_ini_body_pos"<< _ini_body_pos<<std::endl;
   if(_ini_body_pos[2] < 0.35) {
@@ -119,7 +118,6 @@ FSM_StateName FSM_State_BalanceStand<T>::checkTransition() {
       this->transitionDuration = 0.0;
 
       // Set the next gait in the scheduler to
-      this->_data->_gaitScheduler->gaitData._nextGait = GaitType::TROT;
       break;
 
     case K_PASSIVE:

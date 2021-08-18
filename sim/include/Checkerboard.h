@@ -20,6 +20,7 @@ class Checkerboard {
    * Set the color of the dark squares
    * Do this before computeVertices
    */
+
   void setDarkColor(const float* dark) { _darkColor = dark; }
 
   /*!

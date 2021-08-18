@@ -44,8 +44,6 @@ void FSM_State_FrontJump2<T>::onEnter() {
     // Reset the transition data
     this->transitionData.zero();
 
-    // Always set the gait to be standing in this state
-    this->_data->_gaitScheduler->gaitData._nextGait = GaitType::STAND;
 
     _ini_body_pos = (this->_data->_stateEstimator->getResult()).position;
     _wbc_data->pBody_des=_ini_body_pos;

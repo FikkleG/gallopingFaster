@@ -165,15 +165,15 @@ void RobotRunner::run() {
 /*!
  * Before running user code, setup the leg control and estimators
  */
-void RobotRunner::setupStep() {
+void RobotRunner::setupStep()
+{
   // Update the leg data
-  if (robotType == RobotType::MINI_CHEETAH) {
+  if (robotType == RobotType::MINI_CHEETAH)
     _legController->updateData(spiData);
-  } else if (robotType == RobotType::CHEETAH_3) {
+  else if (robotType == RobotType::CHEETAH_3)
     _legController->updateData(tiBoardData);
-  } else {
+  else
     assert(false);
-  }
 
   // Setup the leg controller for a new iteration
   _legController->zeroCommand();
@@ -190,7 +190,8 @@ void RobotRunner::setupStep() {
   }
 
   // check transition from cheater mode:
-  if (_cheaterModeEnabled && !controlParameters->cheater_mode) {
+  if (_cheaterModeEnabled && !controlParameters->cheater_mode)
+  {
     printf("[RobotRunner] Transitioning from Cheater Mode...\n");
     initializeStateEstimator(false);
     // todo any configuration
@@ -205,14 +206,15 @@ void RobotRunner::setupStep() {
 /*!
  * After the user code, send leg commands, update state estimate, and publish debug data
  */
-void RobotRunner::finalizeStep() {
-  if (robotType == RobotType::MINI_CHEETAH) {
+void RobotRunner::finalizeStep()
+{
+  if (robotType == RobotType::MINI_CHEETAH)
     _legController->updateCommand(spiCommand);
-  } else if (robotType == RobotType::CHEETAH_3) {
+  else if (robotType == RobotType::CHEETAH_3)
     _legController->updateCommand(tiBoardCommand);
-  } else {
+  else
     assert(false);
-  }
+
   _legController->setLcm(&leg_control_data_lcm, &leg_control_command_lcm);
   _stateEstimate.setLcm(state_estimator_lcm);
   _lcm.publish("leg_control_command", &leg_control_command_lcm);
@@ -225,22 +227,27 @@ void RobotRunner::finalizeStep() {
  * Reset the state estimator in the given mode.
  * @param cheaterMode
  */
-void RobotRunner::initializeStateEstimator(bool cheaterMode) {
+void RobotRunner::initializeStateEstimator(bool cheaterMode)
+{
   _stateEstimator->removeAllEstimators();
   _stateEstimator->addEstimator<ContactEstimator<float>>();
   Vec4<float> contactDefault;
   contactDefault << 0.5, 0.5, 0.5, 0.5;
   _stateEstimator->setContactPhase(contactDefault);
-  if (cheaterMode) {
+  if (cheaterMode)
+  {
     _stateEstimator->addEstimator<CheaterOrientationEstimator<float>>();
     _stateEstimator->addEstimator<CheaterPositionVelocityEstimator<float>>();
-  } else {
+  }
+  else
+  {
     _stateEstimator->addEstimator<VectorNavOrientationEstimator<float>>();
     _stateEstimator->addEstimator<LinearKFPositionVelocityEstimator<float>>();
   }
 }
 
-RobotRunner::~RobotRunner() {
+RobotRunner::~RobotRunner()
+{
   delete _legController;
   delete _stateEstimator;
   delete _jpos_initializer;

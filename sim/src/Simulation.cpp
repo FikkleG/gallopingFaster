@@ -297,28 +297,23 @@ void Simulation::step(double dt, double dtLowLevelControl,
   }
 
   // actuator model:
-  if (_robot == RobotType::MINI_CHEETAH) {
-    for (int leg = 0; leg < 4; leg++) {
-      for (int joint = 0; joint < 3; joint++) {
+  if (_robot == RobotType::MINI_CHEETAH)
+  {
+    for (int leg = 0; leg < 4; leg++)
+      for (int joint = 0; joint < 3; joint++)
         _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(
             _spineBoards[leg].torque_out[joint],
             _simulator->getState().qd[leg * 3 + joint]);
-      }
-    }
-
 //        std::cout<<"tau[0-3]:"<<_tau[0]<<"\t"<<_tau[1]<<"\t"<<_tau[2]<<std::endl;
-  } else if (_robot == RobotType::CHEETAH_3) {
-    for (int leg = 0; leg < 4; leg++) {
-      for (int joint = 0; joint < 3; joint++) {
-        _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(
-            _tiBoards[leg].data->tau_des[joint],
-            _simulator->getState().qd[leg * 3 + joint]);
-      }
-    }
-  } else
-  {
-    assert(false);
   }
+  else if (_robot == RobotType::CHEETAH_3)
+  {
+    for (int leg = 0; leg < 4; leg++)
+      for (int joint = 0; joint < 3; joint++)
+        _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(_tiBoards[leg].data->tau_des[joint],_simulator->getState().qd[leg * 3 + joint]);
+  }
+  else
+     assert(false);
 
   // dynamics
   _currentSimTime += dt;
@@ -401,13 +396,12 @@ void Simulation::highLevelControl()
                                    &_sharedMemory().simToRobot.vectorNav);
 
   // send leg data to robot
-  if (_robot == RobotType::MINI_CHEETAH) {
+  if (_robot == RobotType::MINI_CHEETAH)
     _sharedMemory().simToRobot.spiData = _spiData;
-  } else if (_robot == RobotType::CHEETAH_3) {
-    for (int i = 0; i < 4; i++) {
+  else if (_robot == RobotType::CHEETAH_3)
+    for (int i = 0; i < 4; i++)
       _sharedMemory().simToRobot.tiBoardData[i] = *_tiBoards[i].data;
-    }
-  } else
+  else
     assert(false);
 
 
@@ -434,16 +428,13 @@ void Simulation::highLevelControl()
   _robotMutex.unlock();
 
   // update
-  if (_robot == RobotType::MINI_CHEETAH) {
+  if (_robot == RobotType::MINI_CHEETAH)
     _spiCommand = _sharedMemory().robotToSim.spiCommand;
-  } else if (_robot == RobotType::CHEETAH_3) {
-    for (int i = 0; i < 4; i++) {
+  else if (_robot == RobotType::CHEETAH_3)
+    for (int i = 0; i < 4; i++)
       _tiBoards[i].command = _sharedMemory().robotToSim.tiBoardCommand[i];
-    }
-  } else {
+  else
     assert(false);
-  }
-
   _highLevelIterations++;
 }
 
@@ -498,7 +489,8 @@ void Simulation::buildLcmMessage()
  */
 void Simulation::addCollisionPlane(double mu, double resti, double height,
                                    double sizeX, double sizeY, double checkerX,
-                                   double checkerY, bool addToWindow) {
+                                   double checkerY, bool addToWindow)
+{
   _simulator->addCollisionPlane(mu, resti, height);
   if (addToWindow && _window) {
     _window->lockGfxMutex();
@@ -590,7 +582,7 @@ void Simulation::runAtSpeed(std::function<void(std::string)> errorCallback, bool
       "speed %f graphics %d)...\n",
       _simParams.dynamics_dt, _simParams.low_level_dt, _simParams.high_level_dt,
       _simParams.simulation_speed, graphics);
-  bool neverChangeControl = false;
+  bool neverChangeControl = true;
   bool neverChangeGait = false;
   while (_running)
   {

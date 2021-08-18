@@ -24,7 +24,6 @@ template <typename T>
 ControlFSM<T>::ControlFSM(Quadruped<T>* _quadruped,
                           StateEstimatorContainer<T>* _stateEstimator,
                           LegController<T>* _legController,
-                          GaitScheduler<T>* _gaitScheduler,
                           DesiredStateCommand<T>* _desiredStateCommand,
                           RobotControlParameters* controlParameters,
                           VisualizationData* visualizationData,
@@ -34,7 +33,6 @@ ControlFSM<T>::ControlFSM(Quadruped<T>* _quadruped,
   data._quadruped = _quadruped;
   data._stateEstimator = _stateEstimator;
   data._legController = _legController;
-  data._gaitScheduler = _gaitScheduler;
   data._desiredStateCommand = _desiredStateCommand;
   data.controlParameters = controlParameters;
   data.visualizationData = visualizationData;
@@ -365,9 +363,6 @@ void ControlFSM<T>::printInfo(int opt) {
         } else if (operatingMode == FSM_OperatingMode::ESTOP) {
           std::cout << "Operating Mode: ESTOP\n";
         }
-        std::cout << "Gait Type: " << data._gaitScheduler->gaitData.gaitName
-                  << "\n";
-        std::cout << std::endl;
 
         // Reset iteration counter
         printIter = 0;

@@ -345,7 +345,7 @@ void solve_mpc(update_data_t* update, problem_setup* setup)
     for(s16 j = 0; j < 12; j++)
       X_d(13*i+j,0) = update->traj[12*i+j];
   }
-  cout<<"XD:\n"<<X_d<<endl;
+  //cout<<"XD:\n"<<X_d<<endl;
 
 
 

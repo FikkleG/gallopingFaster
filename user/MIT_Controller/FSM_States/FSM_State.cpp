@@ -202,11 +202,7 @@ template <typename T>
 void FSM_State<T>::runBalanceController() {
   double minForce = 25;
   double maxForce = 500;
-  double contactStateScheduled[4];  // = {1, 1, 1, 1};
-  for (int i = 0; i < 4; i++) {
-    contactStateScheduled[i] =
-        _data->_gaitScheduler->gaitData.contactStateScheduled(i);
-  }
+  double contactStateScheduled[4] = {1, 1, 1, 1};
 
   double minForces[4];  // = {minForce, minForce, minForce, minForce};
   double maxForces[4];  // = {maxForce, maxForce, maxForce, maxForce};
