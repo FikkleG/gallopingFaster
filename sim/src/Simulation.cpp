@@ -15,11 +15,10 @@
  * Initialize the simulator here.  It is _not_ okay to block here waiting for
  * the robot to connect. Use firstRun() instead!
  */
-Simulation::Simulation(RobotType robot, Graphics3D* window, SimulatorControlParameters& params, ControlParameters& userParams, std::function<void(void)> uiUpdate)
+Simulation::Simulation(RobotType robot, SimulatorControlParameters& params, ControlParameters& userParams)
     : _simParams(params), _userParams(userParams), _tau(12)
  {
 
-  _uiUpdate = uiUpdate;
   // init parameters
   printf("[Simulation] Load parameters...\n");
   _simParams.lockMutex();  // we want exclusive access to the simparams at this point
@@ -52,25 +51,6 @@ Simulation::Simulation(RobotType robot, Graphics3D* window, SimulatorControlPara
                                                  : buildCheetah3<double>();
   printf("[Simulation] Build actuator model...\n");
   _actuatorModels = _quadruped.buildActuatorModels();
-  _window = window;
-
-  //_window = nullptr;
-  // init graphics
-  if (isvirual && _window)
-  {
-    _window->setAnimating(true);
-    printf("[Simulation] Setup Cheetah graphics...\n");
-    Vec4<float> truthColor, seColor;
-    truthColor << 0.2, 0.4, 0.2, 0.6;
-    seColor << .75,.75,.75, 1.0;
-    _simRobotID = _robot == RobotType::MINI_CHEETAH ? window->setupMiniCheetah(truthColor, true, true)
-                                                    : window->setupCheetah3(truthColor, true, true);
-    _controllerRobotID = _robot == RobotType::MINI_CHEETAH
-                             ? window->setupMiniCheetah(seColor, false, false)
-                             : window->setupCheetah3(seColor, false, false);
-  }
-  else
-      _window->hide();
 
   // init rigid body dynamics
   printf("[Simulation] Build rigid body model...\n");
@@ -152,8 +132,6 @@ Simulation::Simulation(RobotType robot, Graphics3D* window, SimulatorControlPara
   else
     assert(false);
 
-  if(isvirual)
-    _window->_drawList._visualizationData = &_sharedMemory().robotToSim.visualizationData;
 
   // load robot control parameters
   printf("[Simulation] Load control parameters...\n");
@@ -184,70 +162,12 @@ void Simulation::sendControlParameter(const std::string& name,
                                       ControlParameterValue value,
                                       ControlParameterValueKind kind, bool isUser)
 {
-  ControlParameterRequest& request =
-      _sharedMemory().simToRobot.controlParameterRequest;
-  ControlParameterResponse& response =
-      _sharedMemory().robotToSim.controlParameterResponse;
-
-  // first check no pending message
-  assert(request.requestNumber == response.requestNumber);
-
-  // new message
-  request.requestNumber++;
-
-  // message data
-  request.requestKind = isUser ? ControlParameterRequestKind::SET_USER_PARAM_BY_NAME : ControlParameterRequestKind::SET_ROBOT_PARAM_BY_NAME;
-  strcpy(request.name, name.c_str());
-  request.value = value;
-  request.parameterKind = kind;
-  printf("%s\n", request.toString().c_str());
-
-  // run robot:
-  //_robotMutex.lock();
-  _sharedMemory().simToRobot.mode = SimulatorMode::RUN_CONTROL_PARAMETERS;
-  _sharedMemory().simulatorIsDone();
-
-  // wait for robot code to finish
-  /* cheack if timeout or not
-  if (_sharedMemory().waitForRobotWithTimeout()) {
-  } else {
-    handleControlError();
-    request.requestNumber = response.requestNumber; // so if we come back we won't be off by 1
-    _robotMutex.unlock();
-    return;
-  }
-  */
-
-  _sharedMemory().waitForRobot();
-  //_robotMutex.unlock();
-
-  // verify response is good
-  assert(response.requestNumber == request.requestNumber);
-  assert(response.parameterKind == request.parameterKind);
-  assert(std::string(response.name) == request.name);
 }
 
 /*!
  * Report a control error.  This doesn't throw and exception and will return so you can clean up
  */
 void Simulation::handleControlError() {
-  _wantStop = true;
-  _running = false;
-  _connected = false;
-  _uiUpdate();
-  if(!_sharedMemory().robotToSim.errorMessage[0])
-  {
-    printf(
-      "[ERROR] Control code timed-out!\n");
-    _errorCallback("Control code has stopped responding without giving an error message.\nIt has likely crashed - "
-                   "check the output of the control code for more information");
-
-  }
-  else
-  {
-    printf("[ERROR] Control code has an error!\n");
-    _errorCallback("Control code has an error:\n" + std::string(_sharedMemory().robotToSim.errorMessage));
-  }
 
 }
 
@@ -266,7 +186,6 @@ void Simulation::firstRun()
     _lcm->handle();
     printf("Success! the robot is alive\n");
     _connected = true;
-    _uiUpdate();
 }
 
 /*!
@@ -296,7 +215,6 @@ void Simulation::step(double dt, double dtLowLevelControl, double dtHighLevelCon
     for (int leg = 0; leg < 4; leg++)
       for (int joint = 0; joint < 3; joint++)
         _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(_spineBoards[leg].torque_out[joint],_simulator->getState().qd[leg * 3 + joint]);
-//        std::cout<<"tau[0-3]:"<<_tau[0]<<"\t"<<_tau[1]<<"\t"<<_tau[2]<<std::endl;
   }
   else if (_robot == RobotType::CHEETAH_3)
   {
@@ -371,12 +289,6 @@ void Simulation::lowLevelControl()
 
 void Simulation::highLevelControl()
 {
-  // send joystick data to robot:
-  if(isvirual)
-  {
-      _sharedMemory().simToRobot.gamepadCommand = _window->getDriverCommand();
-      _sharedMemory().simToRobot.gamepadCommand.applyDeadband(_simParams.game_controller_deadband);
-  }
 
   // send data to robot
 
@@ -419,7 +331,7 @@ void Simulation::highLevelControl()
   }
   else
     assert(false);
-
+  printf("connection successfully once\n");
   _highLevelIterations++;
 }
 
@@ -479,16 +391,6 @@ void Simulation::addCollisionPlane(double mu, double resti, double height,
                                    double sizeX, double sizeY, double checkerX,
                                    double checkerY, bool addToWindow) {
   _simulator->addCollisionPlane(mu, resti, height);
-  if (isvirual && addToWindow && _window)
-  {
-    _window->lockGfxMutex();
-    Checkerboard checker(sizeX, sizeY, checkerX, checkerY);
-
-    size_t graphicsID = _window->_drawList.addCheckerboard(checker, true);
-    _window->_drawList.buildDrawList();
-    _window->_drawList.updateCheckerboard(height, graphicsID);
-    _window->unlockGfxMutex();
-  }
 }
 
 /*!
@@ -509,25 +411,12 @@ void Simulation::addCollisionBox(double mu, double resti, double depth,
                                  bool transparent)
 {
   _simulator->addCollisionBox(mu, resti, depth, width, height, pos, ori);
-  if (isvirual && addToWindow && _window)
-  {
-    _window->lockGfxMutex();
-    _window->_drawList.addBox(depth, width, height, pos, ori, transparent);
-    _window->unlockGfxMutex();
-  }
 }
 void Simulation::addCollisonShake(double mu, double rest, const Vec3<double>& pos,double period, bool addToWindow)
 {
     _pos = pos;
     _period = int(period);
     buildShaking();
-    _simulator->addCollsionShake(mu,rest,pos,period,_allOri);
-    if (isvirual && addToWindow && _window)
-    {
-        _window->lockGfxMutex();
-        _window->_drawList.addBox(5,5,0.1,pos,_allOri[0],1);
-        _window->unlockGfxMutex();
-    }
 }
 void Simulation::addCollisionMesh(double mu, double resti, double grid_size,
                                   const Vec3<double>& left_corner_loc,
@@ -536,13 +425,6 @@ void Simulation::addCollisionMesh(double mu, double resti, double grid_size,
 {
   _simulator->addCollisionMesh(mu, resti, grid_size, left_corner_loc,
                                height_map);
-  if (isvirual && addToWindow && _window)
-  {
-    _window->lockGfxMutex();
-    _window->_drawList.addMesh(grid_size, left_corner_loc, height_map,
-                               transparent);
-    _window->unlockGfxMutex();
-  }
 }
 
 /*!
@@ -551,72 +433,31 @@ void Simulation::addCollisionMesh(double mu, double resti, double grid_size,
  * desired speed
  * @param dt
  */
-void Simulation::runAtSpeed(std::function<void(std::string)> errorCallback, bool graphics)
+void Simulation::runAtSpeed(std::function<void(std::string)> errorCallback)
 {
-  _errorCallback = errorCallback;
+  _errorCallback = std::move(errorCallback);
   firstRun();  // load the control parameters
 
   // if we requested to stop, stop.
   if (_wantStop) return;
   assert(!_running);
   _running = true;
-  Timer frameTimer;
-  Timer freeRunTimer;
-  u64 desiredSteps = 0;
   u64 steps = 0;
 
-  double frameTime = 1. / 60.;
-  double lastSimTime = 0;
 
   printf(
-      "[Simulator] Starting run loop (dt %f, dt-low-level %f, dt-high-level %f "
-      "speed %f graphics %d)...\n",
-      _simParams.dynamics_dt, _simParams.low_level_dt, _simParams.high_level_dt,
-      _simParams.simulation_speed, graphics);
+      "[Simulator] Starting run loop (dt %f, dt-low-level %f, dt-high-level %f "")...\n",
+      _simParams.dynamics_dt, _simParams.low_level_dt, _simParams.high_level_dt);
 
   while (_running)
   {
     double dt = _simParams.dynamics_dt;
     double dtLowLevelControl = _simParams.low_level_dt;
     double dtHighLevelControl = _simParams.high_level_dt;
-    if(isvirual)
-        _desiredSimSpeed = (_window && _window->wantTurbo()) ? 100.f : _simParams.simulation_speed;
-    if(isvirual && _window && _window->wantSloMo())
-      _desiredSimSpeed /= 10.;
-    u64 nStepsPerFrame = (u64)(((1. / 60.) / dt) * _desiredSimSpeed);
-    if((!isvirual) || (!_window->IsPaused() && steps < desiredSteps))
-    {
-      _simParams.lockMutex();   
-      step(dt, dtLowLevelControl, dtHighLevelControl);
-      _simParams.unlockMutex();
-      steps++;
-    }
-    else
-    {
-      double timeRemaining = frameTime - frameTimer.getSeconds();
-      if (timeRemaining > 0)
-        usleep((u32)(timeRemaining * 1e6));
-    }
-    if (frameTimer.getSeconds() > frameTime)
-    {
-      double realElapsedTime = frameTimer.getSeconds();
-      frameTimer.start();
-      if (isvirual && _window)
-      {
-        double simRate = (_currentSimTime - lastSimTime) / realElapsedTime;
-        lastSimTime = _currentSimTime;
-        sprintf(_window->infoString,
-                "[Simulation Run %5.2fx]\n"
-                "real-time:  %8.3f\n"
-                "sim-time:   %8.3f\n"
-                "rate:       %8.3f\n",
-                _desiredSimSpeed, freeRunTimer.getSeconds(), _currentSimTime,
-                simRate);
-        updateGraphics();
-      }
-      if(!isvirual || (!_window->IsPaused() && (desiredSteps - steps) < nStepsPerFrame))
-        desiredSteps += nStepsPerFrame;
-    }
+    _simParams.lockMutex();
+    step(dt, dtLowLevelControl, dtHighLevelControl);
+    _simParams.unlockMutex();
+    steps++;
   }
 }
 
@@ -814,26 +655,6 @@ void Simulation::loadTerrainFile(const std::string& terrainFileName,bool addGrap
 
 void Simulation::updateGraphics()
 {
-  _robotControllerState.bodyOrientation =
-      _sharedMemory().robotToSim.mainCheetahVisualization.quat.cast<double>();
-  _robotControllerState.bodyPosition =
-      _sharedMemory().robotToSim.mainCheetahVisualization.p.cast<double>();
-  for (int i = 0; i < 12; i++)
-    _robotControllerState.q[i] = _sharedMemory().robotToSim.mainCheetahVisualization.q[i];
-  _robotDataSimulator->setState(_robotControllerState);
-  _robotDataSimulator->forwardKinematics();  // calc all body positions
-  _window->_drawList.updateRobotFromModel(*_simulator, _simRobotID, true);
-  _window->_drawList.updateRobotFromModel(*_robotDataSimulator,
-                                          _controllerRobotID, false);
-  _window->_drawList.updateAdditionalInfo(*_simulator);
-    if (_isShaking)
-    {
-        _window->lockGfxMutex();
-        _window->_drawList.popBox();
-        _window->_drawList.addBox(5,5,0.1,_pos,_allOri[_time % (2*_period)],1);
-        _window->unlockGfxMutex();
-    }
-  _window->update();
 }
 
 

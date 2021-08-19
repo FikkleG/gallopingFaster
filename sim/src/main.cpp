@@ -25,6 +25,31 @@
 /*!
  * Setup QT and run a simulation
  */
+
+
+void run(Simulation *_simulation)
+{
+
+}
+
+int main(int argc, char *argv[])
+{
+    install_segfault_handler(nullptr);
+    RobotType robotType = RobotType::MINI_CHEETAH;
+    SimulatorControlParameters _parameters;
+    ControlParameters _userParameters("user-parameters");
+    _parameters.initializeFromYamlFile("/media/gj/data/gallopingFaster/config/simulator-defaults.yaml");
+    _userParameters.defineAndInitializeFromYamlFile(getConfigDirectoryPath() + "mc-mit-ctrl-user-parameters.yaml");
+    auto *_simulation = new Simulation(robotType, _parameters, _userParameters);
+    _simulation->loadTerrainFile("/media/gj/data/gallopingFaster/config/default-terrain.yaml");
+    //std::thread _simThread = std::thread(run, _simulation);
+    std::function<void(std::string)> error_function = [](std::string str){};
+    _simulation->runAtSpeed(error_function);
+
+    return 0;
+}
+
+/*old version
 int main(int argc, char *argv[])
 {
   install_segfault_handler(nullptr);
@@ -40,3 +65,4 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+*/

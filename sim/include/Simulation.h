@@ -46,9 +46,8 @@ class Simulation
   friend class SimControlPanel;
   public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  explicit Simulation(RobotType robot, Graphics3D* window,
-                      SimulatorControlParameters& params, ControlParameters& userParams,
-                      std::function<void(void)> ui_update);
+  explicit Simulation(RobotType robot,
+                      SimulatorControlParameters& params, ControlParameters& userParams);
 
   /*!
    * Explicitly set the state of the robot
@@ -82,7 +81,7 @@ class Simulation
    */
   void updateGraphics();
 
-  void runAtSpeed(std::function<void(std::string)> error_callback, bool graphics = true);
+  void runAtSpeed(std::function<void(std::string)> error_callback);
   void sendControlParameter(const std::string& name,
                             ControlParameterValue value,
                             ControlParameterValueKind kind,
@@ -101,7 +100,6 @@ class Simulation
     delete _robotDataSimulator;
     delete _imuSimulator;
     delete _lcm;
-    _sharedMemory.closeNew();
   }
 
   const FBModelState<double>& getRobotState() { return _simulator->getState(); }
@@ -111,11 +109,6 @@ class Simulation
     _running = false;  // kill simulation loop
     _wantStop = true;  // if we're still trying to connect, this will kill us
 
-    if (_connected)
-    {
-      _sharedMemory().simToRobot.mode = SimulatorMode::EXIT;
-      _sharedMemory().simulatorIsDone();
-    }
   }
 
   SimulatorControlParameters& getSimParams() { return _simParams; }
@@ -158,10 +151,9 @@ class Simulation
     SpiCommand _spiCommand;
 private:
   void handleControlError();
-  Graphics3D* _window = nullptr;
-  bool isvirual = false;
-  //std::mutex _robotMutex;
-  SharedMemoryObject<SimulatorSyncronizedMessage> _sharedMemory;
+  //Graphics3D* _window = nullptr;
+  //bool isvirual = false;
+  //SharedMemoryObject<SimulatorSyncronizedMessage> _sharedMemory;
   ImuSimulator<double>* _imuSimulator = nullptr;
   SimulatorControlParameters& _simParams;
   ControlParameters& _userParams;
@@ -182,7 +174,6 @@ private:
   RobotType _robot;
   lcm::LCM* _lcm = nullptr;
 
-  std::function<void(void)> _uiUpdate;
   std::function<void(std::string)> _errorCallback;
   bool _isShaking = false;
   u64 _time = 0;

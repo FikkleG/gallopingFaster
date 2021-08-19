@@ -376,9 +376,7 @@ void SimControlPanel::on_startButton_clicked()
     try
     {
       printf("[SimControlPanel] Initialize simulator...\n");
-      _simulation = new Simulation(robotType, _graphicsWindow, _parameters, _userParameters,
-        // this will allow the simulation thread to poke us when there's a state change
-        [this](){QMetaObject::invokeMethod(this,"update_ui");});
+      _simulation = new Simulation(robotType, _parameters, _userParameters);
       loadSimulationParameters(_simulation->getSimParams());
       loadRobotParameters(_simulation->getRobotParams());
 
